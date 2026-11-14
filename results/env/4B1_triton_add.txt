@@ -1,0 +1,5 @@
+n=     1 torch.float32: PASS
+n=  1024 torch.float32: PASS
+n= 98437 torch.float32: PASS
+n= 98437 torch.float16: PASS
+4B.1 PASS

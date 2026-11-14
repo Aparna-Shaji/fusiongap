@@ -1,0 +1,11 @@
+python          : 3.14.4
+platform        : Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.43
+torch           : 2.15.0+cu132
+torch CUDA      : 13.2
+cuda available  : True
+device          : NVIDIA GeForce GTX 1650
+capability      : (7, 5)
+arch list       : ['sm_75', 'sm_80', 'sm_86', 'sm_90', 'sm_100', 'sm_120']
+free/total VRAM : 3295 / 4096 MiB
+triton          : 3.9.0
+V1 PASS
