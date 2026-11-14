@@ -1,0 +1,9 @@
+# Checks that run automatically before every commit (pre-commit framework).
+repos:
+  - repo: local
+    hooks:
+      - id: gitleaks
+        name: gitleaks (scan staged changes for secrets)
+        entry: gitleaks protect --staged --redact --verbose
+        language: system
+        pass_filenames: false

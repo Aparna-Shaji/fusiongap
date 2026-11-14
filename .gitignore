@@ -1,0 +1,29 @@
+# Python environment: rebuilt from the lock file (stage 05), never committed
+.venv/
+
+# Python bytecode caches
+__pycache__/
+*.py[cod]
+
+# Tool caches (linter, type checker, test runner)
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Build output: Python packages and compiled CUDA extensions (stage 15)
+build/
+dist/
+*.egg-info/
+*.so
+
+# Secrets: never committed; variable NAMES go in .env.example instead
+.env
+.env.*
+!.env.example
+
+# Editor and operating-system clutter
+.vscode/
+.DS_Store
+
+# results/ is deliberately NOT ignored: raw data, including discarded and
+# throttled runs, is committed (brief §16, control C8).
