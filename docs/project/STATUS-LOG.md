@@ -10,3 +10,6 @@ One entry per working day; weekly reviews marked ★. Newest at the bottom.
 | 2026-11-15 Sun | D7 | Stage 01 charter and four logs drafted (AM-03); commit failed: files also saved under docs/projects/ | Gate 01 → 02 requirements → 03 evaluation → 4C telemetry under load → 4D host limits | — |
 | 2026-11-16/17 | D8–D9 | No project work | — | — |
 | 2026-11-18 Wed | D10 | Duplicate docs/projects/ moved out of the repo; charter baseline date and D7 entry corrected; stage 01 pushed | Gate 01 → 02 requirements → 03 evaluation → 4C → 4D | — |
+
+## Notes
+- **Commit messages `7dfc348` and `985936a`** (gate 01 condition, recorded 2026-11-18): these two commits repeat the messages of `b309148` and `3a738ef`. Their actual contents are the charter baseline-date correction (`7dfc348`) and the status-log corrections (`985936a`). Not rewritten: amending commits that are already on the public remote would rewrite history that the `prereg-v1` tag will depend on.
