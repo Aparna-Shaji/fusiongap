@@ -202,13 +202,163 @@ runs in UTC. The schema excludes hostname and username (finding RV-10).
 08 (harness emits it), 05 (pins) · **Closes:** DoD-17
 **Tier:** CORE
 
-<!-- PENDING 2B · Study requirements REQ-S1 to REQ-S11. REQ-S2 must name oracle O1 (sync versus
-     no-sync) explicitly, because the charter generalised that definition-of-done line to "passes its
-     validation oracles". REQ-S5's roofline criterion is written from the brief's fuller wording.
-     REQ-S11 states the T4-only scope, with the P100 half recorded as cut by amendment at gate 05
-     (change request CR-04) and never silently omitted. -->
+## 2B · Study requirements
+
+Each requirement names the measurement that settles it. REQ-S12 was added here: mapping the 23
+requirements the plan defines against DoD-1 to DoD-17 showed DoD-1 (prior-art positioning) covered by
+none of them. Gate 02's own NO-GO branch prescribes adding the requirement, so no change request is
+needed.
+
+### REQ-S1 · Measured hardware ceilings
+**Statement:** This GPU's ceilings are measured, never taken from specifications: peak
+device-to-device copy bandwidth in GB/s, and peak FLOP/s for fp32 and fp16 separately from a large
+dense GEMM. The measurement method is published alongside the numbers.
+**Criterion:** both ceilings recorded under results/ with the script that produced them, the dtype
+named for each FLOP/s figure, and the gap against the vendor specification noted. The ridge point per
+dtype is computed from these measured values, and no roofline claim anywhere uses a specification
+number.
+**Method:** test (the benchmarks), analysis (the ridge point), inspection (method published) ·
+**Owner stage:** 07 · **Closes:** DoD-3; supplies the denominator REQ-S5 requires
+**Tier:** CORE
+**Note:** deviceQuery reports a 1515 MHz maximum clock against nvidia-smi's 1785 MHz — about an 18 %
+spread in theoretical fp32 peak — which is why only measured ceilings are used (finding R16).
+
+### REQ-S2 · Harness validation oracles
+**Statement:** The harness passes oracles O1 to O7 before any comparative number is reported. O1 is
+the sync-versus-no-sync demonstration: the same workload timed with and without
+`torch.cuda.synchronize()` must differ substantially, proving the harness measures execution rather
+than launch overhead.
+**Criterion:** every oracle has a recorded pass with its output. O1 is named explicitly because the
+charter generalises this definition-of-done line to "passes its validation oracles" while the brief's
+line is specifically the sync-versus-no-sync difference. O2 degrades to a linearity check if no clock
+is readable, a two-timer oracle checks the host clock against summed CUDA-event times (finding RV-07),
+and O7 requires the same cell timed with the telemetry sampler on and off to agree within IQR
+(finding RV-06).
+**Method:** test · **Owner stage:** 08, with 8D adding the oracles from the plan review ·
+**Closes:** DoD-4
+**Tier:** CORE. A failed oracle stops everything downstream — this is the week-one hard gate.
+
+### REQ-S3 · Measurement hygiene per reported cell
+**Statement:** Every reported cell is a median with inter-quartile range over at least five repeats,
+with at least twenty warm-up iterations discarded, variant order shuffled within each repeat, a
+cooldown between benchmark groups, and GPU clock, temperature and power limit logged per run. No bare
+single number appears anywhere.
+**Criterion:** the raw CSV holds every repeat, including discarded and throttled runs; throttling
+events are reported rather than dropped; any cell whose telemetry shows the power limit changing
+during the run is invalidated and re-measured (risk R21).
+**Method:** test (the harness emits it), inspection (raw data committed) · **Owner stage:** 08,
+10B (PROTOCOL fixes repeats, warm-up and cooldown), 13A (schema) · **Closes:** DoD-8, jointly with
+REQ-F6
+**Tier:** CORE
+
+### REQ-S4 · Inductor-generated code as evidence
+**Statement:** The Triton code Inductor generates for each kernel pattern is dumped, committed, and
+discussed in the report: what it fused, whether it fused more or less than the hand-written kernel,
+and what that implies about where automatic fusion stops.
+**Criterion:** one committed dump per kernel pattern under results/inductor/, each tied to the pinned
+torch version, plus a report section that draws a conclusion from them rather than merely attaching
+them.
+**Method:** inspection · **Owner stage:** 19B (K1), 23D (K3), 26B (K2 if built) · **Closes:** DoD-9
+**Tier:** CORE
+**Note:** the stage-4B spike already showed Inductor specialising a kernel to its exact size (constant
+element count, all-true mask) — a mechanism to discuss at stage 19.
+
+### REQ-S5 · Roofline per kernel
+**Statement:** For each kernel the report gives arithmetic intensity (FLOPs per byte moved to and from
+global memory), the ridge point computed from the measured ceilings, whether the kernel is
+memory-bound or compute-bound against that ridge point, and achieved bandwidth as a percentage of the
+measured peak. The denominator is named at every use.
+**Criterion:** written from the brief's full wording rather than the charter's one-line summary. Every
+figure states which peak and which dtype it uses; a roofline figure without a named denominator is
+incomplete — the same error as a utilisation figure with no peak.
+**Method:** analysis, with inspection of the denominator statement · **Owner stage:** 19C (K1),
+23E (K3), on REQ-S1's ceilings · **Closes:** DoD-10
+**Tier:** CORE
+
+### REQ-S6 · End-to-end attribution
+**Statement:** The report states what fraction of baseline training-step time each kernel occupied
+before substitution, and interprets the end-to-end effect against that fraction.
+**Criterion:** the attribution table exists with a measured share per kernel, and the report draws the
+Amdahl conclusion itself — a kernel that was 3 % of step time cannot deliver more than a 3 %
+end-to-end gain — rather than leaving the reader to notice.
+**Method:** analysis from profiler data · **Owner stage:** 24, gate 25 · **Closes:** DoD-11, jointly
+with REQ-F7
+**Tier:** CORE
+
+### REQ-S7 · K3 memory boundary and demo configuration
+**Statement:** The K3 result is reported as an out-of-memory boundary curve over (batch x sequence,
+vocabulary) for variants B1 to B4, plus one exact configuration where the reference fails on 4 GB and
+the fusiongap kernel completes.
+**Criterion:** the curve covers a grid, not a single favourable point (finding R13); the demo
+configuration is recorded exactly — batch, sequence, vocabulary, dtype and logits policy — and
+rehearsed before it is shown; the logits-precision policy is the one fixed in PROTOCOL, because that
+choice moves the boundary by up to roughly 3x (finding RV-02).
+**Method:** demonstration for the configuration, test for the curve · **Owner stage:** 23C, rehearsed
+at 29 · **Closes:** DoD-12
+**Tier:** CORE
+
+### REQ-S8 · Every loss reported
+**Statement:** Every configuration where a baseline beat the hand-written kernel is reported with its
+number, in the body of the report.
+**Criterion:** a script derives the losing cells from the raw results and the report contains each
+one, with the count stated rather than left implicit. Prediction P4 anticipates at least one such
+cell, so an empty list is itself a result that needs explaining.
+**Method:** inspection against the raw data · **Owner stage:** 25A, 29 (claims audit) ·
+**Closes:** DoD-13
+**Tier:** CORE
+
+### REQ-S9 · Predictions scored by their pre-registered rules
+**Statement:** Predictions P1 to P4 are scored by the decision rules fixed before the prereg-v1 tag,
+including those that turn out false.
+**Criterion:** scoring uses the operational rules in PROTOCOL and PREDICTIONS — P1 counts only cells
+where the Triton kernel beats eager with non-overlapping IQRs and is unscorable if more than half the
+cells are undefined; P4 requires the loss to exceed the minimum effect size fixed before tagging, with
+non-overlapping IQRs, and to recur when re-measured in a fresh session. A scoring script and a hand
+check must agree. Neither file is edited after the tag; any deviation is disclosed, not hidden.
+**Method:** test (the scoring script), inspection (script against hand check) · **Owner stage:**
+10 (rules tagged), 25A (scored) · **Closes:** DoD-15
+**Tier:** CORE
+
+### REQ-S10 · Ridge-point portability limitation in the abstract
+**Statement:** The abstract states that this GPU's ridge point is far below a datacenter GPU's, so the
+roofline conclusions drawn here do not transfer, and that an optimisation which wins on consumer
+Turing may be the wrong optimisation elsewhere.
+**Criterion:** the statement appears in the abstract, not only in a limitations section, and uses this
+project's own measured ridge points rather than illustrative figures.
+**Method:** inspection · **Owner stage:** 28 (report), checked at 29 · **Closes:** DoD-14
+**Tier:** CORE
+
+### REQ-S11 · Portability check on a second device
+**Statement:** The benchmark suite runs unattended on a Kaggle T4 — the same Turing family but with
+tensor cores — and the report states whether the ranking of variants is stable against the GTX 1650,
+explaining any instability from each device's own roofline.
+**Criterion:** one unattended script per device writing to results/kaggle/; the correctness suite runs
+first on that device before any timing; device-specific ceilings measured by the stage-07 method; and
+profiler kernel names recorded rather than inferred wherever a GEMM may take a tensor-core path.
+**Method:** test · **Owner stage:** 26A · **Closes:** SE-3
+**Tier:** STRONGLY EXPECTED, T4 only. The P100 half of SE-3 is unachievable — Kaggle no longer offers
+P100 and the pinned torch drops Pascal — and is recorded as CUT BY AMENDMENT at gate 05 (change
+request CR-04), never silently omitted. Note: the plan-file upload labels this OPTIONAL; the charter
+places the Kaggle check in the strongly-expected tier and governs.
+
+### REQ-S12 · Prior-art positioning
+**Statement:** A positioning paragraph is written and committed before the first file under
+src/fusiongap/, citing at least five sources actually read, stating plainly that the kernels are not
+novel, and naming what this study measures that the cited work does not publish.
+**Criterion:** at least five citations, each confirmed to resolve to a real source that was read
+(fact-check item F8 requires confirming each before citing); the paragraph is the README's first
+substantive paragraph; and its commit date precedes the first commit of any file under src/fusiongap/,
+verifiable from git history rather than asserted.
+**Method:** inspection, with the ordering check run against git log · **Owner stage:** 09 ·
+**Closes:** DoD-1
+**Tier:** CORE — first item on the never-cut list.
+**Added at 2B:** DoD-1 was covered by no requirement in the plan's set. Gate 02's NO-GO branch for a
+definition-of-done line with no requirement prescribes adding one, so this is the gate's remedy rather
+than a change to the plan.
+
 <!-- PENDING 2D · End-to-end model criteria. -->
 <!-- PENDING 2E · Acceptance criteria summary and NON-GOALS.md; reconcile the brief's nine refused
      items against the charter's EXCLUDED tier rather than writing a third list. -->
 <!-- PENDING 2F · TRACEABILITY-MATRIX.md v0 on DoD-1 to DoD-17 and SE-1 to SE-6; restore plan section
-     order in this file at the same time. -->
+     order in this file at the same time. B5 Liger and K3 strategy (b) appear as optional rows with no
+     requirement of their own, because neither is a definition-of-done line. -->
