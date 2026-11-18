@@ -356,9 +356,52 @@ verifiable from git history rather than asserted.
 definition-of-done line with no requirement prescribes adding one, so this is the gate's remedy rather
 than a change to the plan.
 
-<!-- PENDING 2D · End-to-end model criteria. -->
-<!-- PENDING 2E · Acceptance criteria summary and NON-GOALS.md; reconcile the brief's nine refused
-     items against the charter's EXCLUDED tier rather than writing a third list. -->
+## 2D · End-to-end model criteria
+
+These fix what REQ-F7 runs on. The model is chosen at stage 11D against these criteria and frozen
+there; it is not written from scratch.
+
+**(a) Architecture.** A Llama-style decoder block: RMSNorm, SwiGLU, and a residual add feeding the
+norm, so that K1 and K2 actually execute in the step. A model that routes around either kernel makes
+the attribution table meaningless.
+
+**(b) Vocabulary and head.** A realistic vocabulary, at least the V = 32000 case, with an LM head and
+loss that K3 can replace. Without a realistic vocabulary the K3 memory result has nothing to act on.
+
+**(c) Fit and provenance.** Stock forward and backward fit in 4 GB with free VRAM to spare at the
+chosen configuration, the licence is permissive, and the reference implementation is known-good.
+Free VRAM varies on this machine because the display compositor also runs on the GTX 1650, so the
+margin is measured rather than assumed (verification item V5).
+
+**(d) Data.** Random token IDs are sufficient for step-time measurement. Real text is required only if
+the quantization arm needs a quality number (26D).
+
+## 2E · Acceptance criteria and non-goals
+
+**Acceptance criteria.** Every requirement in 2A, 2B and 2C carries its criterion, its verification
+method, its owner stage and the definition-of-done line it closes, recorded inline rather than in a
+separate list, so a requirement and its acceptance test cannot drift apart.
+
+**Coverage result (the evidence gate 02 is scored against).** All seventeen core lines are covered by
+at least one requirement:
+
+- DoD-1 → REQ-S12 · DoD-2 → REQ-Q3 · DoD-3 → REQ-S1 · DoD-4 → REQ-S2, evidence from REQ-F6
+- DoD-5 → REQ-F1 · DoD-6 → REQ-F2 · DoD-7 → REQ-Q1, REQ-Q2 · DoD-8 → REQ-F6, REQ-S3
+- DoD-9 → REQ-S4 · DoD-10 → REQ-S5 · DoD-11 → REQ-F7, REQ-S6 · DoD-12 → REQ-S7
+- DoD-13 → REQ-S8 · DoD-14 → REQ-S10 · DoD-15 → REQ-S9 · DoD-16 → REQ-F5
+- DoD-17 → REQ-Q3, REQ-Q4, REQ-Q5
+- SE-1 → REQ-F3 · SE-2 → REQ-F4 · SE-3 → REQ-S11 (T4 only) · SE-4, SE-5, SE-6 → no requirement of
+  their own; they are reporting obligations settled at stages 26C, 10A and 10B and recorded in the
+  traceability matrix
+
+DoD-1 was uncovered until REQ-S12 was added at 2B. DoD-2 is covered as a clause of REQ-Q3 rather than
+by a requirement of its own, which is weaker; gate 02 decides whether that is sufficient.
+
+**Non-goals** are recorded in docs/requirements/NON-GOALS.md — the charter's EXCLUDED tier, which
+already reconciles the brief's eight refused items with the scaling-law exclusion named in the brief's
+role-alignment table.
+
 <!-- PENDING 2F · TRACEABILITY-MATRIX.md v0 on DoD-1 to DoD-17 and SE-1 to SE-6; restore plan section
-     order in this file at the same time. B5 Liger and K3 strategy (b) appear as optional rows with no
+     order in this file at the same time (2A, 2B, 2C, 2D, 2E, 2F), and remove the DRAFT status line
+     only when gate 02 passes. B5 Liger and K3 strategy (b) appear as optional rows with no
      requirement of their own, because neither is a definition-of-done line. -->
