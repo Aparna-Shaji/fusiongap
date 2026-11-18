@@ -126,12 +126,89 @@ and the end-to-end result is reported even where the gain is small or negative.
 choice), 24 (end-to-end), gate 25 · **Closes:** DoD-11
 **Tier:** CORE
 
-<!-- PENDING 2B · Study requirements REQ-S1 to REQ-S11. Note at writing time: SE-3 names the Kaggle
-     P100, which change request CR-04 determined is unavailable and dropped; REQ-S11 must state the
-     T4-only scope and the P100 half must be recorded as cut by amendment at gate 05, never silently
-     omitted. -->
-<!-- PENDING 2C · Quality requirements REQ-Q1 to REQ-Q5. REQ-Q1 fixes the per-dtype tolerances that
-     REQ-F1 to REQ-F4 refer to, so it cannot be deferred past gate 02. -->
+## 2C · Quality requirements
+
+Written before 2B because REQ-Q1 fixes the per-dtype tolerances that REQ-F1, REQ-F2, REQ-F3 and
+REQ-F4 all refer to. Plan order is restored at 2F, before gate 02.
+
+### REQ-Q1 · Correctness suite, passing before any timing run
+**Statement:** Every kernel passes the brief section 8 suite before it is benchmarked: forward
+comparison against the PyTorch reference across shapes and dtypes with rtol and atol stated per dtype
+and justified; `torch.autograd.gradcheck` in fp64 on small shapes; analytic gradients compared against
+the reference's on realistic shapes in the working dtype; the section 8 edge cases (all-zero input,
+fp16 overflow range, underflow and denormals, non-contiguous inputs, shapes that are not a multiple of
+the block size, batch size 1, hidden dim 1, sequence length 1, and for K3 a chunk size that does not
+evenly divide the row count); and Triton-versus-CUDA agreement within the stated tolerance.
+**Criterion:** the suite exists as tests and runs green, and the tolerance values are recorded together
+with the reasoning that produced them. A red gradcheck blocks benchmarking outright — the hard gate.
+A disagreement between the Triton and CUDA implementations means one of them is wrong and is resolved
+before anything else proceeds.
+**Method:** test, plus inspection of the recorded tolerance justification · **Owner stage:** 16 (suite
+built and mutation-tested), 17 and 18 (K1), 21 and 22 (K3), 26B (K2) · **Closes:** DoD-7
+**Tier:** CORE
+**Note — deliberately not fixed here:** the numeric tolerances are derived and recorded at stage 16,
+before the first kernel is timed. This requirement demands that they be stated and justified, not that
+they take any particular value. Choosing numbers before a measured error distribution exists invites
+the failure mode of widening them later until a test passes, which destroys the gate.
+
+### REQ-Q2 · Determinism verified, or variance measured and reported
+**Statement:** For each kernel, determinism is either verified — same input, same kernel, same result
+across runs — or, where a reduction uses atomics and is not deterministic, the non-determinism is
+declared and the observed run-to-run variance is reported.
+**Criterion:** a test asserts repeatability wherever determinism is claimed; where it is not claimed,
+the report carries the measured spread and names the reduction responsible. Silence on this point is
+not acceptable in either direction.
+**Method:** test, plus inspection of the report statement · **Owner stage:** 16, then per kernel at
+17, 18, 21, 22 · **Closes:** DoD-7 (determinism clause)
+**Tier:** CORE
+
+### REQ-Q3 · Reproducibility contract
+**Statement:** The repository satisfies the brief section 16 contract: install on a clean machine;
+a REPRODUCE document giving exact commands per figure with expected runtime and expected hardware;
+pinned PyTorch, Triton, CUDA toolkit and driver versions; every result file carrying git SHA, device
+name, compute capability, driver version, clock and temperature; one command regenerating every plot
+from raw CSV; raw benchmark data committed including discarded and throttled runs; the
+Inductor-generated code committed as evidence; at least one profiler trace per kernel; the
+pre-registered predictions committed before the results commit; a known-limitations section; and every
+configuration where a baseline won reported with its number.
+**Criterion:** each clause maps to a named artefact in the repository, checked clause by clause at
+stage 27 (rebuild from scratch on a fresh distribution) and again at gate 30.
+**Method:** inspection, with the clean-machine clause by demonstration (shared with REQ-F5) ·
+**Owner stage:** 05 (pins), 13A (result schema), 27 (rebuild), 29 (claims audit), 31 (release) ·
+**Closes:** DoD-17, and supports DoD-1, DoD-2, DoD-9, DoD-13, DoD-16
+**Tier:** CORE. Owned by the measurement-validity role as an evidence-bound claim (decision D-10).
+
+### REQ-Q4 · Continuous integration on every push
+**Statement:** GitHub Actions runs build, lint, type check, the CPU-reference tests and a gitleaks
+secret scan on every push. GPU tests run locally and their output is committed against the SHA that
+produced it, because free runners have no GPU (fact-check item F11).
+**Criterion:** a green CI run on the current SHA, and a committed GPU test log for every SHA that
+claims a GPU test passed. A GPU claim with no log for that SHA counts as unproven.
+**Method:** inspection of the CI run and the per-SHA logs · **Owner stage:** 15 (CI, including the
+gitleaks job that closes finding RV-03), 16 (test suite) · **Closes:** DoD-17 metadata-and-evidence
+clause; supports DoD-7
+**Tier:** CORE
+
+### REQ-Q5 · Environment metadata in every result file
+**Statement:** Every file under results/ carries: git SHA, device name, compute capability, driver and
+KMD version, CUDA UMD version, PyTorch, Triton and CUDA toolkit versions, the
+TRITON_DEFAULT_FP_FUSION setting, GPU clock, temperature and power limit during the run, the fixed
+NitroSense setting, and a UTC timestamp.
+**Criterion:** the schema is fixed at 13A and a validator rejects any result file missing a field. The
+power limit is recorded because this GPU's limit was observed changing between 30 W and 50 W on AC
+power, and a change to it invalidates the run (risk R21). Timestamps are UTC because the WSL clock
+runs in UTC. The schema excludes hostname and username (finding RV-10).
+**Method:** test (the validator), inspection (the schema document) · **Owner stage:** 13A (schema),
+08 (harness emits it), 05 (pins) · **Closes:** DoD-17
+**Tier:** CORE
+
+<!-- PENDING 2B · Study requirements REQ-S1 to REQ-S11. REQ-S2 must name oracle O1 (sync versus
+     no-sync) explicitly, because the charter generalised that definition-of-done line to "passes its
+     validation oracles". REQ-S5's roofline criterion is written from the brief's fuller wording.
+     REQ-S11 states the T4-only scope, with the P100 half recorded as cut by amendment at gate 05
+     (change request CR-04) and never silently omitted. -->
 <!-- PENDING 2D · End-to-end model criteria. -->
-<!-- PENDING 2E · Acceptance criteria summary and NON-GOALS.md. -->
-<!-- PENDING 2F · TRACEABILITY-MATRIX.md v0, built on DoD-1 to DoD-17 and SE-1 to SE-6. -->
+<!-- PENDING 2E · Acceptance criteria summary and NON-GOALS.md; reconcile the brief's nine refused
+     items against the charter's EXCLUDED tier rather than writing a third list. -->
+<!-- PENDING 2F · TRACEABILITY-MATRIX.md v0 on DoD-1 to DoD-17 and SE-1 to SE-6; restore plan section
+     order in this file at the same time. -->
