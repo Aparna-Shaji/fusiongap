@@ -1,6 +1,7 @@
 # FusionGap · Requirements and acceptance criteria
 
-**Status: DRAFT — all sections written (2A to 2F). Gate 02 has NOT run. Not baselined.**
+**Status: DRAFT — all sections written (2A to 2F). Gate 02 returned NO-GO on 2026-11-18; the eight
+findings are corrected and a re-review is pending. Not baselined.**
 Authority: project brief v1 section 20 (definition of done) and section 14 (non-goals), as amended by
 `docs/project/AMENDMENTS.md`. Where the charter summarises a brief line, the brief's fuller wording
 is used for the criterion. Baselined only when gate 02 passes.
@@ -62,8 +63,10 @@ REQ-Q1, and `torch.autograd.gradcheck` passes in fp64 on small shapes.
 CUDA C++, forward and backward, which never materialises the full logits tensor or its gradient.
 Peak memory scales with chunk size times vocabulary, not with batch times sequence times vocabulary.
 **Criterion:** forward loss and the gradients with respect to hidden states and vocabulary weights
-match the reference within REQ-Q1 tolerances; gradcheck passes in fp64; measured peak memory grows
-with chunk size and not with total rows across the swept grid; a chunk size that does not evenly
+match the reference within REQ-Q1 tolerances; gradcheck passes in fp64; the memory-scaling claim is
+checked as two measurements — at fixed chunk size, measured peak memory stays flat within a tolerance
+fixed in PROTOCOL as the total row count rises by at least a factor of four, and at fixed row count it
+rises approximately linearly across at least three chunk sizes; a chunk size that does not evenly
 divide the row count is covered.
 **Method:** test, plus analysis for the memory-scaling claim · **Owner stage:** 20 (strategy),
 21 (Triton), 22 (CUDA), gate 23 · **Closes:** DoD-6
@@ -150,9 +153,12 @@ spread in theoretical fp32 peak — which is why only measured ceilings are used
 ### REQ-S2 · Harness validation oracles
 **Statement:** The harness passes oracles O1 to O7 before any comparative number is reported. O1 is
 the sync-versus-no-sync demonstration: the same workload timed with and without
-`torch.cuda.synchronize()` must differ substantially, proving the harness measures execution rather
-than launch overhead.
-**Criterion:** every oracle has a recorded pass with its output. O1 is named explicitly because the
+`torch.cuda.synchronize()` must differ by at least the factor fixed in PROTOCOL (10B), proving the
+harness measures execution rather than launch overhead.
+**Criterion:** O1 passes only when the no-sync median falls below a stated fraction of the sync
+median, with that fraction fixed in PROTOCOL before the harness is accepted and recorded with the
+reasoning that set it; a threshold chosen after seeing the measurement is a tuned threshold and voids
+the oracle. Every oracle has a recorded pass with its output. O1 is named explicitly because the
 charter generalises this definition-of-done line to "passes its validation oracles" while the brief's
 line is specifically the sync-versus-no-sync difference. O2 degrades to a linearity check if no clock
 is readable, a two-timer oracle checks the host clock against summed CUDA-event times (finding RV-07),
@@ -180,8 +186,10 @@ REQ-F6
 discussed in the report: what it fused, whether it fused more or less than the hand-written kernel,
 and what that implies about where automatic fusion stops.
 **Criterion:** one committed dump per kernel pattern under results/inductor/, each tied to the pinned
-torch version, plus a report section that draws a conclusion from them rather than merely attaching
-them.
+torch version, plus a report section stating, per kernel pattern, which operations Inductor fused,
+whether that set is the same as, larger than, or smaller than the hand-written kernel's, and at least
+one named mechanism for any difference. A section that attaches the dump without answering those three
+points does not satisfy this requirement.
 **Method:** inspection · **Owner stage:** 19B (K1), 23D (K3), 26B (K2 if built) · **Closes:** DoD-9
 **Tier:** CORE
 **Note:** the stage-4B spike already showed Inductor specialising a kernel to its exact size (constant
@@ -202,9 +210,10 @@ incomplete — the same error as a utilisation figure with no peak.
 ### REQ-S6 · End-to-end attribution
 **Statement:** The report states what fraction of baseline training-step time each kernel occupied
 before substitution, and interprets the end-to-end effect against that fraction.
-**Criterion:** the attribution table exists with a measured share per kernel, and the report draws the
-Amdahl conclusion itself — a kernel that was 3 % of step time cannot deliver more than a 3 %
-end-to-end gain — rather than leaving the reader to notice.
+**Criterion:** the attribution table states each kernel's measured share of baseline step time, and
+the report states, beside the measured end-to-end result, the maximum end-to-end gain that share
+permits — a kernel that was 3 % of step time cannot deliver more than a 3 % end-to-end gain. A measured
+gain reported without that ceiling next to it does not satisfy this requirement.
 **Method:** analysis from profiler data · **Owner stage:** 24, gate 25 · **Closes:** DoD-11, jointly
 with REQ-F7
 **Tier:** CORE
@@ -269,16 +278,49 @@ places the Kaggle check in the strongly-expected tier and governs.
 **Statement:** A positioning paragraph is written and committed before the first file under
 src/fusiongap/, citing at least five sources actually read, stating plainly that the kernels are not
 novel, and naming what this study measures that the cited work does not publish.
-**Criterion:** at least five citations, each confirmed to resolve to a real source that was read
-(fact-check item F8 requires confirming each before citing); the paragraph is the README's first
-substantive paragraph; and its commit date precedes the first commit of any file under src/fusiongap/,
-verifiable from git history rather than asserted.
+**Criterion:** at least five citations, each confirmed to resolve to a real source (fact-check item F8
+requires confirming each before citing); for at least three of them the paragraph states what that
+source does and does not publish about these kernels, which is the check that distinguishes reading
+from listing; the paragraph is the README's first substantive paragraph; and its commit is an ancestor
+of the first commit of any file under src/fusiongap/, checked with `git merge-base --is-ancestor`
+rather than by comparing dates.
 **Method:** inspection, with the ordering check run against git log · **Owner stage:** 09 ·
 **Closes:** DoD-1
 **Tier:** CORE — first item on the never-cut list.
 **Added at 2B:** DoD-1 was covered by no requirement in the plan's set. Gate 02's NO-GO branch for a
 definition-of-done line with no requirement prescribes adding one, so this is the gate's remedy rather
 than a change to the plan.
+
+### REQ-S13 · Profiler traces, or a recorded failure
+**Statement:** Nsight Systems and Nsight Compute traces are committed, at least one per kernel, if the
+tooling runs on this GPU under WSL2.
+**Criterion:** one trace per kernel under results/traces/ with the tool version recorded; or, where
+the tooling does not run, a recorded reproduction of the failure (command, error output, date) plus a
+dated AMENDMENTS entry cutting SE-4, and a report statement that the roofline rests on hand-computed
+arithmetic and PyTorch profiler data instead. Counter data is never fabricated where the tool was
+unavailable (fact-check item F6).
+**Method:** inspection · **Owner stage:** 4C (does it run), 26C (traces) · **Closes:** SE-4
+**Tier:** STRONGLY EXPECTED, conditional on F6. DONE with evidence or CUT by amendment; never
+relabelled.
+
+### REQ-S14 · Autotuning search documented
+**Statement:** The autotuning configuration search is documented: the space searched, the
+configurations tried, the winner per shape, and the wall-clock cost of searching.
+**Criterion:** a committed record per autotuned kernel listing the search space and the selected
+configuration for each shape, plus the search's wall-clock cost reported as its own number, so a tuned
+result is not presented as though the tuning were free.
+**Method:** inspection · **Owner stage:** 10A, then per kernel at 17, 18, 21, 22 · **Closes:** SE-5
+**Tier:** STRONGLY EXPECTED
+
+### REQ-S15 · Compilation time reported as its own cost
+**Statement:** `torch.compile` compilation time is measured separately from execution and reported as
+its own number, at both default and max-autotune settings.
+**Criterion:** the first compiled call's wall-clock time is recorded per cell and excluded from the
+timed region as warm-up, and the report carries a compile-time table beside the speed tables. A
+speedup reported without its compilation cost overstates the compiler's practical value.
+**Method:** test (the harness records it), inspection (the table exists) · **Owner stage:** 08,
+10B (PROTOCOL), 28 (report) · **Closes:** SE-6
+**Tier:** STRONGLY EXPECTED
 
 ## 2C · Quality requirements
 
@@ -303,7 +345,8 @@ built and mutation-tested), 17 and 18 (K1), 21 and 22 (K3), 26B (K2) · **Closes
 **Note — deliberately not fixed here:** the numeric tolerances are derived and recorded at stage 16,
 before the first kernel is timed. This requirement demands that they be stated and justified, not that
 they take any particular value. Choosing numbers before a measured error distribution exists invites
-the failure mode of widening them later until a test passes, which destroys the gate.
+the failure mode of widening them later until a test passes, which destroys the gate. Once recorded,
+a tolerance is widened only by a dated AMENDMENTS entry naming the measurement that justified it.
 
 ### REQ-Q2 · Determinism verified, or variance measured and reported
 **Statement:** For each kernel, determinism is either verified — same input, same kernel, same result
@@ -356,6 +399,26 @@ runs in UTC. The schema excludes hostname and username (finding RV-10).
 08 (harness emits it), 05 (pins) · **Closes:** DoD-17
 **Tier:** CORE
 
+### REQ-Q6 · Pre-registration integrity
+**Statement:** Predictions P1 to P4, together with the decision rules that score them, are committed
+and tagged `prereg-v1` on the public remote before any comparative result between a baseline and a
+hand-written kernel exists. Neither PROTOCOL nor PREDICTIONS is edited after the tag; a deviation is
+disclosed in AMENDMENTS, never silently applied.
+**Criterion:** six checks, all mechanical — (1) the predictions file and the `prereg-v1` tag both
+exist on the public remote; (2) the tagged commit contains both the predictions and the scoring rules;
+(3) that commit carries a date; (4) that commit is an ancestor of every commit containing a
+comparative result, checked with `git merge-base --is-ancestor` rather than a date filter; (5) the
+rules used to score P1 to P4 at 25A are byte-identical to the tagged ones; (6) any post-tag change to
+either file appears as a dated AMENDMENTS entry.
+**Method:** inspection, with checks 4 and 5 run as commands · **Owner stage:** 10 (tag), 25A
+(scoring), 29 (claims audit) · **Closes:** DoD-2
+**Tier:** CORE — second item on the never-cut list.
+**Why its own requirement:** DoD-2 states a temporal-integrity condition, not a packaging one, and it
+carries its own hard checkpoint at gate 10. Inside REQ-Q3 it was one clause among a dozen and could be
+satisfied by inspection of the wrong thing. Check 4 uses ancestry deliberately: date filtering
+misbehaved in this repository on 18 Nov 2026 (friction log), and ancestry is a structural fact of the
+history rather than a parsed timestamp.
+
 ## 2D · End-to-end model criteria
 
 These fix what REQ-F7 runs on. The model is chosen at stage 11D against these criteria and frozen
@@ -385,17 +448,19 @@ separate list, so a requirement and its acceptance test cannot drift apart.
 **Coverage result (the evidence gate 02 is scored against).** All seventeen core lines are covered by
 at least one requirement:
 
-- DoD-1 → REQ-S12 · DoD-2 → REQ-Q3 · DoD-3 → REQ-S1 · DoD-4 → REQ-S2, evidence from REQ-F6
+- DoD-1 → REQ-S12 · DoD-2 → REQ-Q6 · DoD-3 → REQ-S1 · DoD-4 → REQ-S2, evidence from REQ-F6
 - DoD-5 → REQ-F1 · DoD-6 → REQ-F2 · DoD-7 → REQ-Q1, REQ-Q2 · DoD-8 → REQ-F6, REQ-S3
 - DoD-9 → REQ-S4 · DoD-10 → REQ-S5 · DoD-11 → REQ-F7, REQ-S6 · DoD-12 → REQ-S7
 - DoD-13 → REQ-S8 · DoD-14 → REQ-S10 · DoD-15 → REQ-S9 · DoD-16 → REQ-F5
 - DoD-17 → REQ-Q3, REQ-Q4, REQ-Q5
-- SE-1 → REQ-F3 · SE-2 → REQ-F4 · SE-3 → REQ-S11 (T4 only) · SE-4, SE-5, SE-6 → no requirement of
-  their own; they are reporting obligations settled at stages 26C, 10A and 10B and recorded in the
-  traceability matrix
+- SE-1 → REQ-F3 · SE-2 → REQ-F4 · SE-3 → REQ-S11 (T4 only) · SE-4 → REQ-S13 · SE-5 → REQ-S14 ·
+  SE-6 → REQ-S15
 
-DoD-1 was uncovered until REQ-S12 was added at 2B. DoD-2 is covered as a clause of REQ-Q3 rather than
-by a requirement of its own, which is weaker; gate 02 decides whether that is sufficient.
+Gate 02's first run returned NO-GO on 2026-11-18. These are the corrections: DoD-1 had no requirement
+until REQ-S12 was added at 2B; DoD-2 was covered only as a clause of REQ-Q3 and now has REQ-Q6; SE-4,
+SE-5 and SE-6 had no criterion and now have REQ-S13, REQ-S14 and REQ-S15; and four criteria with
+untestable wording — REQ-S2's oracle threshold, REQ-F2's memory scaling, and the report conclusions in
+REQ-S4 and REQ-S6 — were rewritten as named measurements.
 
 **Non-goals** are recorded in docs/requirements/NON-GOALS.md — the charter's EXCLUDED tier, which
 already reconciles the brief's eight refused items with the scaling-law exclusion named in the brief's

@@ -1,6 +1,6 @@
 # FusionGap · Traceability matrix v0
 
-**Status: v0, DRAFT until gate 02.** Identifiers per decision D-25: brief section 20's core list as
+**Status: v0, DRAFT. Gate 02 returned NO-GO on 2026-11-18; corrections applied, re-review pending.** Identifiers per decision D-25: brief section 20's core list as
 DoD-1 to DoD-17, its strongly-expected list as SE-1 to SE-6. Design and test columns are deliberately
 empty and are filled at stage 14 (control C4); an entry there before the design exists would claim
 coverage that does not.
@@ -28,18 +28,22 @@ coverage that does not.
 | REQ-S10 Ridge-point limitation in the abstract | CORE | DoD-14 | 28, 29 | | | not started |
 | REQ-S11 Portability check, T4 only | STRONGLY EXPECTED | SE-3 (T4 half) | 26A | | | not started |
 | REQ-S12 Prior-art positioning | CORE | DoD-1 | 09 | | | not started |
+| REQ-S13 Profiler traces, or a recorded failure | STRONGLY EXPECTED | SE-4 | 4C, 26C | | | not started |
+| REQ-S14 Autotuning search documented | STRONGLY EXPECTED | SE-5 | 10A, 17, 18, 21, 22 | | | not started |
+| REQ-S15 Compilation time as its own cost | STRONGLY EXPECTED | SE-6 | 08, 10B, 28 | | | not started |
 | REQ-Q1 Correctness suite before any timing | CORE | DoD-7 | 16, 17, 18, 21, 22, 26B | | | not started |
 | REQ-Q2 Determinism or measured variance | CORE | DoD-7 | 16, 17, 18, 21, 22 | | | not started |
-| REQ-Q3 Reproducibility contract | CORE | DoD-17; DoD-2 clause | 05, 13A, 27, 29, 31 | | | not started |
+| REQ-Q3 Reproducibility contract | CORE | DoD-17 | 05, 13A, 27, 29, 31 | | | not started |
 | REQ-Q4 Continuous integration on every push | CORE | DoD-17 | 15, 16 | | | not started |
 | REQ-Q5 Environment metadata in every result | CORE | DoD-17 | 05, 08, 13A | | | not started |
+| REQ-Q6 Pre-registration integrity | CORE | DoD-2 | 10, 25A, 29 | | | not started |
 
 ## View 2 · By definition-of-done line — the gate-02 view
 
 | DoD | Core line | Covered by | Owner stage(s) |
 |---|---|---|---|
 | DoD-1 | Positioning paragraph, 5+ sources, before the first kernel | REQ-S12 | 09 |
-| DoD-2 | Pre-registered predictions committed and dated before results | REQ-Q3 (clause) | 10 |
+| DoD-2 | Pre-registered predictions committed and dated before results | REQ-Q6 | 10, 25A |
 | DoD-3 | Measured peak bandwidth and FLOP/s, method published | REQ-S1 | 07 |
 | DoD-4 | Harness self-validation: sync versus no-sync demonstrated | REQ-S2; evidence REQ-F6 | 08 |
 | DoD-5 | K1 in both languages, forward and backward | REQ-F1 | 17, 18 |
@@ -58,9 +62,9 @@ coverage that does not.
 | SE-1 | K2 both languages, scoped as activation fusion | REQ-F3 | 26B |
 | SE-2 | Quantization arm, speed and quality | REQ-F4 | 26D |
 | SE-3 | Kaggle portability, T4 and P100, ranking stability | REQ-S11 covers the T4 half; the P100 half is CUT, recorded by amendment at gate 05 (CR-04) | 26A |
-| SE-4 | Nsight traces committed, if the tooling runs | no requirement; reporting obligation, conditional on F6 | 26C |
-| SE-5 | Autotuning configuration search documented | no requirement; reporting obligation | 10A |
-| SE-6 | torch.compile compile time reported as its own cost | no requirement; reporting obligation | 10B |
+| SE-4 | Nsight traces committed, if the tooling runs | REQ-S13 (conditional on F6) | 4C, 26C |
+| SE-5 | Autotuning configuration search documented | REQ-S14 | 10A |
+| SE-6 | torch.compile compile time reported as its own cost | REQ-S15 | 08, 10B, 28 |
 
 ## Optional items — no definition-of-done line, so no requirement
 
@@ -71,9 +75,14 @@ coverage that does not.
 
 ## Open coverage notes
 
-- DoD-1 had no covering requirement until REQ-S12 was added at 2B. That omission would have failed
-  gate 02, whose NO-GO branch for an uncovered line prescribes adding the requirement.
-- DoD-2 is covered as one clause inside REQ-Q3 rather than by a requirement of its own. This is the
-  weakest link in the matrix and gate 02 should rule on whether it is sufficient.
-- SE-4, SE-5 and SE-6 carry no requirement. They are reporting obligations, each with an owner stage,
-  and each must end as DONE with evidence or CUT by a dated amendment — never relabelled.
+- Gate 02 returned NO-GO on its first run, 2026-11-18. This is the corrected matrix: 28 requirements
+  cover 17 core lines and 6 strongly-expected lines, each with a criterion and a verification method.
+- DoD-1 had no covering requirement until REQ-S12 was added at 2B. DoD-2 was covered only as a clause
+  inside REQ-Q3 and now has REQ-Q6, because it states a temporal-integrity condition and carries its
+  own hard checkpoint at gate 10. SE-4, SE-5 and SE-6 had owner stages but no criterion, so stage 30
+  could not have adjudicated DONE; they now have REQ-S13, REQ-S14 and REQ-S15, each written with a
+  real criterion rather than relabelled from the earlier note.
+- Temporal checks use ancestry (`git merge-base --is-ancestor`), never date comparison: commit-date
+  filtering misbehaved in this repository on 2026-11-18 (friction log), and ancestry is a structural
+  fact of the history rather than a parsed timestamp.
+- Design and test columns stay empty until stage 14 (control C4).
