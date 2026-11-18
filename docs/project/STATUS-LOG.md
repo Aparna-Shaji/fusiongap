@@ -9,7 +9,8 @@ One entry per working day; weekly reviews marked ★. Newest at the bottom.
 | 2026-11-14 Sat ★ | D6 | 4B PASS: hand-written Triton kernel and `torch.compile` both run on compute capability 7.5 (`results/env/4B1_triton_add.txt`, `4B2_output_code.log`); public repo created; pre-commit gitleaks blocks a planted fake key. Weekly review: 16 h worked in week 1 → AM-01 | Stage 01 charter + logs | — |
 | 2026-11-15 Sun | D7 | Stage 01 charter and four logs drafted (AM-03); commit failed: files also saved under docs/projects/ | Gate 01 → 02 requirements → 03 evaluation → 4C telemetry under load → 4D host limits | — |
 | 2026-11-16/17 | D8–D9 | No project work | — | — |
-| 2026-11-18 Wed | D10 | Duplicate docs/projects/ moved out of the repo; charter baseline date and D7 entry corrected; stage 01 pushed | Gate 01 → 02 requirements → 03 evaluation → 4C → 4D | — |
+| 2026-11-18 Wed | D10 / WD5 | Duplicate docs/projects/ moved out of the repo; charter baseline date and D7 entry corrected; stage 01 pushed; gate 01 PASS, both conditions cleared (8086958); CR-09 ruled — 51 h/week kept, nothing cut, tripwire Sun 2027-02-28 (AM-05) | 02 requirements → 03 evaluation → 4C → 4D | — |
 
 ## Notes
 - **Commit messages `7dfc348` and `985936a`** (gate 01 condition, recorded 2026-11-18): these two commits repeat the messages of `b309148` and `3a738ef`. Their actual contents are the charter baseline-date correction (`7dfc348`) and the status-log corrections (`985936a`). Not rewritten: amending commits that are already on the public remote would rewrite history that the `prereg-v1` tag will depend on.
+- **Day numbering** (AM-05, 2026-11-18): rows above use calendar day numbers from D1 = Mon 2026-11-09. The project now counts worked days instead: WD0 = 2026-11-09 (plan review) · WD1 = 11-12 · WD2 = 11-13 · WD3 = 11-14 · WD4 = 11-15 · WD5 = 11-18. Earlier rows keep their original D numbers; new rows use WD.

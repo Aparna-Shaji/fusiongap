@@ -21,8 +21,8 @@ The measurement is the project; the kernels are the instrument. FusionGap claims
 - Budget $0. Solo.
 - Hardware: NVIDIA GeForce GTX 1650 4 GB (Turing, compute capability 7.5), laptop · Ryzen 5 4600H · 8 GB RAM shared by Windows and WSL2 · Ubuntu on WSL2.
 - The laptop is the execution device for every kernel, test and timing run. Free cloud GPUs (Kaggle) are used only for the scripted portability check.
-- Calendar: D1 = Mon 2026-11-09 · D56 = Sun 2027-01-03. Capacity: 8.5 h/day of project work, 6 days/week; Sundays rest (one exception: AM-03).
-- Releases: v1.0.0 (core) directly after the MVP gate, by D46 (Thu 2026-12-24); extensions, blog and talk → v1.1.0 by D55 (Sat 2027-01-02) (AM-02). Current projection: AM-01.
+- Time model: project hours against stage time boxes, not calendar days (AM-05). Planning rate 8.5 h/day of project work, 6 days/week = 51 h/week, plus 1.5 h/day on the parallel career track. Worked days are numbered WD: WD0 = 2026-11-09 (plan review) · WD1 = 11-12 · WD2 = 11-13 · WD3 = 11-14 · WD4 = 11-15 · WD5 = 11-18. Sundays rest (one exception: AM-03). The D1–D56 calendar is retired.
+- Releases: v1.0.0 (core) directly after the MVP gate (AM-02), target Sat 2027-01-02; extensions, blog and talk → v1.1.0, target Sat 2027-01-09 (AM-05). MVP gate (25) target ≈ Mon 2026-12-28. Targets move only with the weekly forecast recorded in STATUS-LOG; no gate is shortened to meet them.
 
 ## 4 · Scope
 **CORE — never cut; v1.0.0 does not ship without every line**
@@ -66,14 +66,14 @@ A GEMM that beats cuBLAS · FlashAttention · compiler or IR construction (this 
 **Stop and re-charter if:**
 - **S1** `torch.compile` (Inductor) or Triton cannot run on compute capability 7.5 with any pinned torch release, so B2 cannot be measured as decided. 2026-11-15: not triggered (spike 4B passed for torch 2.15.0+cu132 / Triton 3.9.0); re-opened only by a version-pin change.
 - **S2** Timing cannot be made valid: the harness oracles still fail after one fix cycle (gate 08), or no fixed laptop setting holds the GPU power limit at one value for a whole session (stages 4C, 7E). Until resolved, no comparative timing row is reported.
-- **S3** The CORE list does not fit by D55 even after every cut in the cut order (gate 06 and every hard checkpoint). Duration or scope is re-chartered; no CORE line is relabelled complete.
+- **S3** The CORE list does not fit before the tripwire date (Sun 2027-02-28) even after every cut in the cut order, measured by the weekly forecast (AM-05). Duration or scope is re-chartered; no CORE line is relabelled complete.
 
 **Not a stop:** prior art already publishing this comparison on consumer Turing. The thesis wording is narrowed by amendment and the study proceeds as an independent replication (gate 09).
 
 ## 7 · Assumptions and routing
-| ID | Assumption | Tested at | Status 2026-11-15 |
+| ID | Assumption | Tested at | Status 2026-11-18 |
 |---|---|---|---|
-| A1 | 51 h/week of project work is available | Weekly review actuals | Week 1: 16 h worked → AM-01 |
+| A1 | 51 h/week of project work is available | Weekly review actuals | Week 1 (11-09…11-15) ≈ 20 h · week 2 to 11-18 ≈ 3 h → AM-01, AM-05, RV-21; builder ruling 11-18 keeps the rate |
 | A2 | A public GitHub repository is acceptable | 1E | VERIFIED 2026-11-14 |
 | A3 | Kaggle GPU access on a verified account | 4H | T4 ×2 listed 2026-11-09; no session run yet |
 | A4 | AC power and one fixed power setting for all timing | 4C, 7E | Always on AC; power limit read 30 W and 50 W on 2026-11-12 → OPEN (R21) |
