@@ -1,6 +1,6 @@
 # FusionGap · Project Charter
 
-Version 1.0 · baselined at gate 01 on 2026-11-15 · changed only by a dated entry in `docs/project/AMENDMENTS.md`
+Version 1.0 · baselined at gate 01 on 2026-11-18 · changed only by a dated entry in `docs/project/AMENDMENTS.md`
 Sources: project brief v1 (Sep 2026) and plan Revision 1 (approved 2026-11-09), both kept outside this repository. This page carries everything a reader needs.
 
 ## 1 · Question
