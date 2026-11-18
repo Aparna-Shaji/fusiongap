@@ -1,6 +1,8 @@
 # FusionGap · Traceability matrix v0
 
-**Status: v0, DRAFT. Gate 02 returned NO-GO on 2026-11-18; corrections applied, re-review pending.** Identifiers per decision D-25: brief section 20's core list as
+**Status: v0, ACCEPTED at gate 02 on 2026-11-18.** Not locked: stage 14 fills the design and test
+columns, and stage 30 fills the status column. Gate 02's first run returned NO-GO on eight findings;
+all eight were corrected and independently re-reviewed before acceptance. Identifiers per decision D-25: brief section 20's core list as
 DoD-1 to DoD-17, its strongly-expected list as SE-1 to SE-6. Design and test columns are deliberately
 empty and are filled at stage 14 (control C4); an entry there before the design exists would claim
 coverage that does not.

@@ -1,7 +1,9 @@
 # FusionGap · Requirements and acceptance criteria
 
-**Status: DRAFT — all sections written (2A to 2F). Gate 02 returned NO-GO on 2026-11-18; the eight
-findings are corrected and a re-review is pending. Not baselined.**
+**Status: BASELINED at gate 02 on 2026-11-18.** Changed only by a dated entry in
+`docs/project/AMENDMENTS.md`. Gate 02's first run returned NO-GO on eight findings; all eight were
+corrected and independently re-reviewed before this baseline. 28 requirements covering 17 core and 6
+strongly-expected definition-of-done lines.
 Authority: project brief v1 section 20 (definition of done) and section 14 (non-goals), as amended by
 `docs/project/AMENDMENTS.md`. Where the charter summarises a brief line, the brief's fuller wording
 is used for the criterion. Baselined only when gate 02 passes.

@@ -1,6 +1,7 @@
 # FusionGap · Non-goals
 
-**Status: DRAFT until gate 02.** Authority: project brief v1 section 14, plus the scaling-law
+**Status: BASELINED at gate 02 on 2026-11-18.** Changed only by a dated entry in
+`docs/project/AMENDMENTS.md`. Authority: project brief v1 section 14, plus the scaling-law
 exclusion named in the brief's role-alignment table (section 3). This list is the charter's EXCLUDED
 tier; it reconciles those two sources rather than adding a third.
 
