@@ -30,13 +30,28 @@ every commit in which a candidate was scored, verified with
 claim gate 03 rests on, and it holds.
 
 AM-04 additionally dates its own decision 2026-11-15 and attributes the weights to an
-ADR-0001 draft dated 2026-11-03. Neither date is verifiable from this repository: the
-amendments log was seeded in a single commit on 2026-11-18, and a date written inside
-a file is author-settable, which is the weakness risk R5 raises about commit dates.
-Both are recorded here as AM-04's attribution and not as established fact. The
-2026-11-03 draft it cites is held outside this repository, so the attribution cannot
-be checked from here; bringing that draft into the history is an open item. No weight
-has moved since, and none moves after a score is seen.
+ADR-0001 draft dated 2026-11-03. That draft is now in this repository at
+`adr/ADR-0001-draft-2026-11-03.md`, so what it says can be audited instead of taken on
+trust. Its weights are 40, 25, 20 and 15, identical to the table above. Two of its
+criterion names are not the names AM-04 records: it writes "SM_75 compatibility evidence"
+where AM-04 writes "Compute-capability-7.5 evidence", and "Reproducibility and exact
+version pinning" where AM-04 writes "Reproducibility (pinnable)". The other two are word
+for word, and no weight changed with the renaming, which is stated here so that no reader
+has to wonder whether a label was adjusted to fit a result. The two pass/fail filters are
+AM-04's own; the draft does not mention them.
+
+Committing that draft fixes what it says, not when it was written. Neither date is
+verifiable from this repository: the amendments log was seeded in a single commit on
+2026-11-18, a date written inside a file is author-settable — the weakness risk R5 raises
+about commit dates — and the draft's own commit is later than every commit in which a
+candidate was scored. Before the draft was copied in here, its filesystem timestamp was 2026-11-02 19:50 UTC,
+which is 2026-11-03 01:20 in local time and so agrees with its header. That timestamp is
+recorded in the message of the commit that added the draft and nowhere else: `cp` did not
+preserve it and git stores no mtime, so it is an observation on the record rather than
+something this repository can re-check. It corroborates AM-04's attribution without
+proving it, a timestamp being settable as well. Both dates stay recorded here as AM-04's
+attribution and not as established fact. What gate 03 rests on is the ancestry above, which
+this change does not touch. No weight has moved since, and none moves after a score is seen.
 
 Where a criterion cannot distinguish the candidates in a cell, it is recorded CONSTANT
 with the evidence that makes it constant, and the discriminating subtotal is shown
