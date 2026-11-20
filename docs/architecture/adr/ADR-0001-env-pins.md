@@ -57,6 +57,12 @@ Four parts.
 `results/env/03_stack_precheck.txt` (2026-11-19). The lock itself does not exist yet and
 is produced at 5C; until then every pin above is a recorded observation, not a lock entry.
 
+The 2026-11-03 draft that AM-04 cites as the provenance of this record's decision criteria
+is committed beside it as `ADR-0001-draft-2026-11-03.md`. It is a skeleton — criteria,
+weights and "Final selections: TBD" — and is kept as provenance for the four weights only,
+not as an earlier version of this decision. `../TECH-STACK.md` section 1 states what it
+does and does not establish.
+
 ## Alternatives rejected
 | Alternative | Why it lost |
 |---|---|
