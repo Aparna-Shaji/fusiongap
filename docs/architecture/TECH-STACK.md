@@ -33,9 +33,10 @@ AM-04 additionally dates its own decision 2026-11-15 and attributes the weights 
 ADR-0001 draft dated 2026-11-03. Neither date is verifiable from this repository: the
 amendments log was seeded in a single commit on 2026-11-18, and a date written inside
 a file is author-settable, which is the weakness risk R5 raises about commit dates.
-Both are recorded here as AM-04's attribution and not as established fact; the
-2026-11-03 draft has not been located and is carried as an open item. No weight has
-moved since, and none moves after a score is seen.
+Both are recorded here as AM-04's attribution and not as established fact. The
+2026-11-03 draft it cites is held outside this repository, so the attribution cannot
+be checked from here; bringing that draft into the history is an open item. No weight
+has moved since, and none moves after a score is seen.
 
 Where a criterion cannot distinguish the candidates in a cell, it is recorded CONSTANT
 with the evidence that makes it constant, and the discriminating subtotal is shown
