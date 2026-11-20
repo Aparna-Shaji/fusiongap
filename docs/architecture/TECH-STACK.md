@@ -14,13 +14,20 @@ Pass/fail filters, applied before any scoring: $0 cost · WSL2 support.
 | Criterion | Weight |
 |---|---|
 | Compute-capability-7.5 evidence | 40 |
-| Reproducibility — pinnable and recreatable from a written document | 25 |
-| Learnable from the current skill baseline | 20 |
-| Relevance to the target role | 15 |
+| Reproducibility (pinnable) | 25 |
+| Ease of learning | 20 |
+| Interview relevance | 15 |
 
-Fixed in `../project/AMENDMENTS.md` AM-04 on 2026-11-18, before any spike evidence
-existed. The criterion names, the weights and the two filters are AM-04's; where this
-file's wording differs from the amendment, AM-04 governs. No weight has moved since and none moves after a score is seen.
+The four names, the weights and the two filters above are quoted from AM-04 rather
+than paraphrased. This project's glosses, which are glosses and not criteria:
+*pinnable* means recreatable from a written document; *ease of learning* is read
+against the skills ledger; *interview relevance* means relevance to the target role.
+
+The weights were set in the ADR-0001 draft dated **2026-11-03**, before any spike
+evidence existed, and recorded as AM-04 in `../project/AMENDMENTS.md` on
+**2026-11-15** — after spikes 4A and 4B had run. The amendment therefore records the
+weights; it does not set them, and the 2026-11-03 draft is the provenance. No weight
+has moved since, and none moves after a score is seen.
 
 Where a criterion cannot distinguish the candidates in a cell, it is recorded CONSTANT
 with the evidence that makes it constant, and the discriminating subtotal is shown
