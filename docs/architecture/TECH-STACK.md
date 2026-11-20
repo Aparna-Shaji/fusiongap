@@ -9,17 +9,18 @@ fails on.
 
 ## 1 · Criteria
 
-Pass/fail filters, applied before any scoring: zero cost · works under WSL2.
+Pass/fail filters, applied before any scoring: $0 cost · WSL2 support.
 
 | Criterion | Weight |
 |---|---|
-| Evidence that it works on compute capability 7.5 | 40 |
+| Compute-capability-7.5 evidence | 40 |
 | Reproducibility — pinnable and recreatable from a written document | 25 |
 | Learnable from the current skill baseline | 20 |
 | Relevance to the target role | 15 |
 
 Fixed in `../project/AMENDMENTS.md` AM-04 on 2026-11-18, before any spike evidence
-existed. No weight has moved since and none moves after a score is seen.
+existed. The criterion names, the weights and the two filters are AM-04's; where this
+file's wording differs from the amendment, AM-04 governs. No weight has moved since and none moves after a score is seen.
 
 Where a criterion cannot distinguish the candidates in a cell, it is recorded CONSTANT
 with the evidence that makes it constant, and the discriminating subtotal is shown

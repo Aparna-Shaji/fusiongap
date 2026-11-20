@@ -47,7 +47,7 @@ Four parts.
 | Triton | 3.9.0 — whatever the torch wheel pins; never chosen separately | `env/requirements.lock` |
 | numpy · pandas · matplotlib | 2.5.5 · 3.1.1 · 3.11.2 | `env/requirements.lock` |
 | pytest · ruff · mypy | [UNKNOWN] — pinned at 5C | `env/requirements.lock` |
-| pre-commit | 4.7.0 | `pre-commit --version` |
+| pre-commit | 4.7.0 | `.venv/bin/pre-commit --version` — it lives in the environment, not on the system path; the git hook still fires without activation because the generated hook holds an absolute path |
 | gitleaks | 8.16.0-1build2 (apt) | `gitleaks version` |
 | `TRITON_DEFAULT_FP_FUSION` | 1, set explicitly | run metadata |
 

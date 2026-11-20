@@ -7,3 +7,10 @@ repos:
         entry: gitleaks protect --staged --redact --verbose
         language: system
         pass_filenames: false
+  # Every text file ends with a newline. Left to an editor setting this was
+  # missed on seven files; a .gitignore without one silently fuses the next
+  # pattern appended to it onto the previous line.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
