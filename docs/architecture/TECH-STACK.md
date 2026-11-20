@@ -23,11 +23,19 @@ than paraphrased. This project's glosses, which are glosses and not criteria:
 *pinnable* means recreatable from a written document; *ease of learning* is read
 against the skills ledger; *interview relevance* means relevance to the target role.
 
-The weights were set in the ADR-0001 draft dated **2026-11-03**, before any spike
-evidence existed, and recorded as AM-04 in `../project/AMENDMENTS.md` on
-**2026-11-15** — after spikes 4A and 4B had run. The amendment therefore records the
-weights; it does not set them, and the 2026-11-03 draft is the provenance. No weight
-has moved since, and none moves after a score is seen.
+Provenance, stated only as far as this repository can prove it. The weights entered
+the repository in commit `3a738ef` at 2026-11-18T07:42:22Z, which is an ancestor of
+every commit in which a candidate was scored, verified with
+`git merge-base --is-ancestor` and never with a date filter (RV-25). That is the
+claim gate 03 rests on, and it holds.
+
+AM-04 additionally dates its own decision 2026-11-15 and attributes the weights to an
+ADR-0001 draft dated 2026-11-03. Neither date is verifiable from this repository: the
+amendments log was seeded in a single commit on 2026-11-18, and a date written inside
+a file is author-settable, which is the weakness risk R5 raises about commit dates.
+Both are recorded here as AM-04's attribution and not as established fact; the
+2026-11-03 draft has not been located and is carried as an open item. No weight has
+moved since, and none moves after a score is seen.
 
 Where a criterion cannot distinguish the candidates in a cell, it is recorded CONSTANT
 with the evidence that makes it constant, and the discriminating subtotal is shown
