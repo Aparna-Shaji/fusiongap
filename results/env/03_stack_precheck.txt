@@ -1,0 +1,46 @@
+# FusionGap stage-03 stack pre-check
+# captured_utc=2026-11-19T15:00:48Z
+# commit_at_capture=0fa8ad2
+
+== python / torch / cuda ==
+$HOME/projects/fusiongap/.venv/lib/python3.14/site-packages/torch/_subclasses/functional_tensor.py:377: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /__w/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:82.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+python 3.14.4
+torch 2.15.0+cu132
+torch.version.cuda 13.2
+
+== nvcc ==
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2026 NVIDIA Corporation
+Built on Fri_May_08_10:53:34_AM_PDT_2026
+Cuda compilation tools, release 13.2, V13.2.86
+Build cuda_13.2.r13.2/compiler.37953736_0
+
+== host compiler ==
+gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+/usr/bin/g++-15
+
+== nvcc host-compiler ceiling (crt/host_config.h) ==
+135:#if __GNUC__ > 15
+136-
+137-#error -- unsupported GNU version! gcc versions later than 15 are not supported! The nvcc flag '-allow-unsupported-compiler' can be used to override this version check; however, using an unsupported host compiler may cause compilation failure or incorrect run time execution. Use at your own risk.
+--
+139:#endif /* __GNUC__ > 15 */
+140-
+141-
+
+== cuda apt source ==
+deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/ /
+
+== sm_75 compile probe ==
+probe: OK
+
+== analysis wheels on python 3.14 (resolve only, installs nothing) ==
+Collecting numpy
+  Using cached numpy-2.5.5-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+Collecting pandas
+  Using cached pandas-3.1.1-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (16 kB)
+Collecting matplotlib
+  Using cached matplotlib-3.11.2-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (80 kB)
+Would install matplotlib-3.11.2 numpy-2.5.5 pandas-3.1.1

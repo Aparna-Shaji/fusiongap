@@ -15,6 +15,7 @@ Every fact the project relies on (F) and every platform item to check (V), with 
 | F9 | Kaggle: ~30 GPU-h/week, 12-h sessions, T4 and P100, 20 GB storage | PARTIAL | Account lists T4 ×2, no P100 · 2026-11-09; terms from Kaggle docs pending | 4H |
 | F10 | Target-role posting is open | VERIFIED (open) | Checked 2026-11-12; details recorded privately outside the repo; re-checked weekly | 1D, weekly review |
 | F11 | GitHub Actions free runners have no GPU | UNVERIFIED | — | 4G |
+| F12 | The CUDA toolkit was installed from NVIDIA's distro-agnostic wsl-ubuntu repository, and CUDA 13.2's validated-distribution tables cover Ubuntu 24.04 and 22.04 for amd64, not 26.04, which first appears with CUDA 13.3 | VERIFIED | apt source `cuda-wsl-ubuntu-x86_64.list`; NVIDIA CUDA Installation Guide for Linux 13.2 §2.1 and §2.3 · `results/env/03_stack_precheck.txt` · 2026-11-19 | 03; disclosed in TECH-STACK and ENVIRONMENT (RV-27) |
 
 ## Platform verification items
 | ID | Item | Status | Evidence · date | Settled at |
@@ -31,3 +32,6 @@ Every fact the project relies on (F) and every platform item to check (V), with 
 | V10 | Pinned stack runs on Kaggle; Inductor on Pascal (SM_60) | PARTIAL | T4 ×2 offered, P100 not offered · 2026-11-09; smoke run pending | 4H, gate 05 |
 | V11 | `tl.dot` in fp16 and fp32 compiles and is correct on compute capability 7.5 | UNVERIFIED | — | 4J |
 | V12 | What max-autotune actually tunes on this GPU | UNVERIFIED | — | 10A |
+| V13 | nvcc major.minor equals `torch.version.cuda`, the pairing `cpp_extension` checks | VERIFIED | nvcc release 13.2 V13.2.86 against torch 2.15.0+cu132 reporting CUDA 13.2 · `results/env/03_stack_precheck.txt` · 2026-11-19 | 03; re-checked at 4E |
+| V14 | nvcc 13.2 accepts the installed host compiler and compiles for sm_75 | VERIFIED | `crt/host_config.h` line 135 errors above GCC major 15 and the installed gcc is 15.2.0, so there is zero headroom (RV-28); `g++-15` is present at /usr/bin/g++-15 and a trivial `-arch=sm_75` compile passed · `results/env/03_stack_precheck.txt` · 2026-11-19 | 03; re-checked at 4E |
+| V15 | numpy, pandas and matplotlib publish wheels for Python 3.14 | VERIFIED | Resolver reports numpy 2.5.5, pandas 3.1.1, matplotlib 3.11.2, all cp314 · `results/env/03_stack_precheck.txt` · 2026-11-19 | 03; pinned at the 05 lock |
