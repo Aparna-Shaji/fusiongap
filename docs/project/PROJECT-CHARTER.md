@@ -71,15 +71,15 @@ A GEMM that beats cuBLAS · FlashAttention · compiler or IR construction (this 
 **Not a stop:** prior art already publishing this comparison on consumer Turing. The thesis wording is narrowed by amendment and the study proceeds as an independent replication (gate 09).
 
 ## 7 · Assumptions and routing
-| ID | Assumption | Tested at | Status 2026-11-19 |
+| ID | Assumption | Tested at | Status 2026-11-21 |
 |---|---|---|---|
-| A1 | 51 h/week of project work is available | Weekly review actuals | Week 1 (11-09 to 11-15) ~20 h. Week 2 to 11-21: 11-18 9.5 h stage + 2.0 h parallel; 11-19 5.0 + 2.0; 11-20 4.0 + 1.0 (re-logged 11-21); total 18.5 h stage + 5.0 h parallel over three worked days, 11-22 still available. Measured mean ~19.3 h/week against the 51 h/week assumption. Of ~38.5 h logged, ~16.2 h maps to a stage time box and ~22.3 h does not. -> AM-01, AM-05, AM-06, RV-21, RV-22, RV-23; builder ruling 11-18 keeps the rate |
+| A1 | 51 h/week of project work is available | Weekly review actuals | Week 1 (11-09 to 11-15) ~20 h. Week 2 to 11-21: 11-18 9.5 h stage + 2.0 h parallel; 11-19 5.0 + 2.0; 11-20 4.0 + 1.0 (re-logged 11-21); 11-21 7.0 h logged as "7 hours including learning", taken as stage with the parallel track unreported; total 25.5 h stage + 5.0 h parallel over four worked days, 11-22 still available. Mean of week 1 and the incomplete week 2 ~22.8 h/week against the 51 h/week assumption. Of ~45.5 h logged, ~19.5 h maps to a stage time box and ~26.0 h does not (D-30). -> AM-01, AM-05, AM-06, RV-21, RV-22, RV-23; builder ruling 11-18 keeps the rate |
 | A2 | A public GitHub repository is acceptable | 1E | VERIFIED 2026-11-14 |
 | A3 | Kaggle GPU access on a verified account | 4H | T4 ×2 listed 2026-11-09; no session run yet |
-| A4 | AC power and one fixed power setting for all timing | 4C, 7E | Always on AC; power limit read 30 W and 50 W on 2026-11-12 → OPEN (R21) |
+| A4 | AC power and one fixed power setting for all timing | 4C, 7E | ANSWERED AND NOT MET AS WRITTEN. Always on AC. The enforced power ceiling is set from Windows, outside this project: `power.limit` is `[N/A]` under WSL2, `enforced.power.limit` read 50 W at 07:00 and 30 W at 08:19 on 11-21, and `-q -d POWER` shows Current 30 W against Requested and Default 50 W. The setting can be recorded but not enforced from here. A change request rewording this assumption is owed once 4C is complete → R21, RV-32 |
 | A5 | Nothing costs money | Every gate | HOLDS |
 
-Facts F1–F11 and verification items V1–V12: `VERIFICATION-LOG.md`.
+Facts F1–F12 and verification items V1–V18: `VERIFICATION-LOG.md`.
 Open decisions and their owning stage: Triton on this GPU → 4B (done) · C++/CUDA readiness → 4E · K3 backward strategy → 20 · K3 chunk size, swept, never hard-coded → 20/23 · end-to-end model → 11D · Nsight under WSL2 → 4C · quantization in or out → gate 23 · INT4 storage-only vs arithmetic → 26D · PyTorch pin → 5A · Kaggle check in or out → gate 23.
 
 ## 8 · Outcome

@@ -44,8 +44,9 @@ Committing that draft fixes what it says, not when it was written. Neither date 
 verifiable from this repository: the amendments log was seeded in a single commit on
 2026-11-18, a date written inside a file is author-settable — the weakness risk R5 raises
 about commit dates — and the draft's own commit is later than every commit in which a
-candidate was scored. Before the draft was copied in here, its filesystem timestamp was 2026-11-02 19:50 UTC,
-which is 2026-11-03 01:20 in local time and so agrees with its header. That timestamp is
+candidate was scored. Before the draft was copied in here, its filesystem timestamp was
+2026-11-02 19:50 UTC, which is 2026-11-03 01:20 in local time and so agrees with its
+header. That timestamp is
 recorded in the message of the commit that added the draft and nowhere else: `cp` did not
 preserve it and git stores no mtime, so it is an observation on the record rather than
 something this repository can re-check. It corroborates AM-04's attribution without
