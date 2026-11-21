@@ -27,9 +27,10 @@ MARGIN = timedelta(seconds=1.0)
 mark = {}
 for line in open(sys.argv[2]):
     p = line.split()
-    if len(p) >= 3 and p[0] in ("SETTLE_START", "LOAD_START", "LOAD_END", "SETTLE_END"):
+    if len(p) >= 3 and p[0] in ("IDLE_START", "IDLE_END", "WARM_END",
+                               "LOAD_START", "LOAD_END", "SETTLE_END"):
         mark[p[0]] = datetime.strptime(p[1] + " " + p[2], FMT)
-for k in ("SETTLE_START", "LOAD_START", "LOAD_END"):
+for k in ("IDLE_START", "IDLE_END", "LOAD_START", "LOAD_END"):
     if k not in mark:
         print(f"MALFORMED load log: {k} missing"); sys.exit(2)
 
@@ -50,7 +51,7 @@ for i, line in enumerate(open(sys.argv[1]), 1):
 num = lambda r, k: float(r[k])
 tim = lambda r: datetime.strptime(r["timestamp"], FMT)
 
-idle = [r for r in rows if mark["SETTLE_START"] + MARGIN <= tim(r) <= mark["LOAD_START"] - MARGIN]
+idle = [r for r in rows if mark["IDLE_START"] + MARGIN <= tim(r) <= mark["IDLE_END"] - MARGIN]
 inld = [r for r in rows if mark["LOAD_START"] <= tim(r) <= mark["LOAD_END"]]
 
 best, cur = (0, 0, 0), None
@@ -111,4 +112,24 @@ print(f"\n4C CELL 10 VERDICT: {'PASS' if (c1 and c2 and c3) else 'FAIL'}")
 print("flags in idle:", sorted({r["clocks_event_reasons.active"] for r in idle}))
 print("flags in window:", sorted({r["clocks_event_reasons.active"] for r in win}))
 print("enforced.power.limit seen:", sorted({r["enforced.power.limit"] for r in rows}))
+
+# observations, never pass criteria
+if "SETTLE_END" in mark:
+    cool = [r for r in rows if mark["LOAD_END"] < tim(r) <= mark["SETTLE_END"]]
+    idle_med = statistics.median(isl)
+    print("\nCOOL-DOWN after LOAD_END (observation):")
+    back = None
+    for r in cool:
+        dt = (tim(r) - mark["LOAD_END"]).total_seconds()
+        print(f"  +{dt:5.1f}s  sm={num(r,'clocks.sm'):6.0f}  util={num(r,'utilization.gpu'):3.0f}"
+              f"  flags={r['clocks_event_reasons.active']}")
+        if back is None and num(r, "clocks.sm") <= idle_med:
+            back = dt
+    print(f"  returned to idle clock after: {back if back is not None else 'not within this window'}")
+if "WARM_END" in mark:
+    warm = [r for r in rows if mark["WARM_END"] <= tim(r) <= mark["LOAD_START"]]
+    if warm:
+        print(f"POST-WARM-UP window (the one that fooled run 1): n={len(warm)} "
+              f"sm_median={statistics.median([num(r,'clocks.sm') for r in warm]):.0f} "
+              f"flags={sorted({r['clocks_event_reasons.active'] for r in warm})}")
 sys.exit(0 if (c1 and c2 and c3) else 1)
