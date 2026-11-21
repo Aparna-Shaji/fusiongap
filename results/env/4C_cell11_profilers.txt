@@ -1,0 +1,82 @@
+### 1 versions
+NVIDIA Nsight Systems version 2025.6.3.541-256337736014v0
+-- nsys --version exit: 0
+NVIDIA (R) Nsight Compute Command Line Profiler
+Copyright (c) 2018-2026 NVIDIA Corporation
+Version 2026.1.1.0 (build 37634170) (public-release)
+-- ncu --version exit: 0
+### 2 nsys environment check
+General Check
+- Timestamp counter supported: Yes
+
+CPU Profiling Environment Check
+- Root privilege: disabled
+- Linux Kernel Paranoid Level: 2 (some features maybe not available)
+- Linux Distribution: Ubuntu
+- Linux Kernel Version (6.18.58.1-microsoft-standard-WSL2): OK
+- Linux perf_event_open syscall available: OK
+- Sampling trigger event available: OK
+- Intel(c) Last Branch Record support: Not Available
+- CPU Profiling Environment (process-tree): OK
+- CPU Profiling Environment (system-wide): Fail
+
+See the product documentation at https://docs.nvidia.com/nsight-systems for more information,
+including information on how to set the Linux Kernel Paranoid Level.
+-- nsys status -e exit: 0
+### 3 nsys trace of the 4B Triton kernel
+~/projects/fusiongap/.venv/lib/python3.14/site-packages/torch/_subclasses/functional_tensor.py:377: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /__w/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:82.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+~/projects/fusiongap/.venv/lib/python3.14/site-packages/triton/knobs.py:504: UserWarning: TRITON_DEFAULT_FP_FUSION is unset: defaulting to FP fusion ENABLED for backward compatibility in Triton 3.9. The default will change to DISABLED in Triton 3.10; set TRITON_DEFAULT_FP_FUSION=1 to keep fusion enabled or =0 to adopt the new default early and silence this warning.
+  warn_once(FP_FUSION_DEFAULT_WARNING)
+n=     1 torch.float32: PASS
+n=  1024 torch.float32: PASS
+n= 98437 torch.float32: PASS
+n= 98437 torch.float16: PASS
+4B.1 PASS
+Collecting data...
+Generating '~/.tmp/nsys-report-0323.qdstrm'
+[1/1] [0%                          ] nsys_triton.nsys-rep[1/1] [0%                          ] nsys_triton.nsys-rep[1/1] [===23%                      ] nsys_triton.nsys-rep[1/1] [=========43%                ] nsys_triton.nsys-rep[1/1] [==============63%           ] nsys_triton.nsys-rep[1/1] [==============64%           ] nsys_triton.nsys-rep[1/1] [===============65%          ] nsys_triton.nsys-rep[1/1] [===============66%          ] nsys_triton.nsys-rep[1/1] [===============67%          ] nsys_triton.nsys-rep[1/1] [================68%         ] nsys_triton.nsys-rep[1/1] [================69%         ] nsys_triton.nsys-rep[1/1] [================70%         ] nsys_triton.nsys-rep[1/1] [================71%         ] nsys_triton.nsys-rep[1/1] [=================72%        ] nsys_triton.nsys-rep[1/1] [=================73%        ] nsys_triton.nsys-rep[1/1] [=================74%        ] nsys_triton.nsys-rep[1/1] [========================100%] nsys_triton.nsys-rep[1/1] [========================100%] nsys_triton.nsys-rep
+Generated:
+	~/.tmp/4c_cell11/nsys_triton.nsys-rep
+-- nsys profile exit: 0
+### 4 did a GPU kernel land in that trace
+Generating SQLite file ~/.tmp/4c_cell11/nsys_triton.sqlite from ~/.tmp/4c_cell11/nsys_triton.nsys-rep
+Processing [~/.tmp/4c_cell11/nsys_triton.sqlite] with [/opt/nvidia/nsight-systems/2025.6.3/host-linux-x64/reports/cuda_gpu_kern_sum.py]... 
+
+ ** CUDA GPU Kernel Summary (cuda_gpu_kern_sum):
+
+ Time (%)  Total Time (ns)  Instances  Avg (ns)  Med (ns)  Min (ns)  Max (ns)  StdDev (ns)                                                  Name                                                
+ --------  ---------------  ---------  --------  --------  --------  --------  -----------  ----------------------------------------------------------------------------------------------------
+     23.3            33600          3   11200.0   14976.0      3456     15168       6707.2  void at::native::reduce_kernel<(int)512, (int)1, at::native::ReduceOp<bool, at::native::func_wrappe…
+     16.0            22976          6    3829.3    2720.0      2016      7136       2295.4  void at::native::<unnamed>::distribution_elementwise_grid_stride_kernel<float, (int)4, void at::nat…
+     13.9            19968          4    4992.0    4464.0      1344      9696       4268.9  add_kernel                                                                                          
+      9.1            13152          2    6576.0    6576.0      6560      6592         22.6  void at::native::<unnamed>::distribution_elementwise_grid_stride_kernel<float, (int)4, void at::nat…
+      7.4            10656          3    3552.0    2144.0      1440      7072       3068.7  void at::native::vectorized_elementwise_kernel<(int)4, at::native::CUDAFunctor_add<float>, std::arr…
+      5.5             7904          3    2634.7    1504.0      1472      4928       1986.1  void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<float, float, bool…
+      4.9             7040          3    2346.7    2176.0      2112      2752        352.5  void at::native::vectorized_elementwise_kernel<(int)4, at::native::AbsFunctor<c10::Half>, std::arra…
+      4.1             5920          2    2960.0    2960.0      2880      3040        113.1  void at::native::vectorized_elementwise_kernel<(int)4, at::native::CUDAFunctor_add<c10::Half>, std:…
+      3.6             5216          2    2608.0    2608.0      2240      2976        520.4  void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<c10::Half, c10::Ha…
+      2.2             3136          1    3136.0    3136.0      3136      3136          0.0  void at::native::vectorized_elementwise_kernel<(int)4, at::native::<unnamed>::CompareFunctor<c10::H…
+      1.8             2560          1    2560.0    2560.0      2560      2560          0.0  void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<bool, bool, bool, …
+      1.8             2528          1    2528.0    2528.0      2528      2528          0.0  void at::native::vectorized_elementwise_kernel<(int)4, at::native::AUnaryFunctor<c10::Half, c10::Ha…
+      1.8             2528          1    2528.0    2528.0      2528      2528          0.0  void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<bool, bool, bool, …
+      1.6             2304          1    2304.0    2304.0      2304      2304          0.0  void at::native::vectorized_elementwise_kernel<(int)4, at::native::BinaryFunctor<bool, bool, bool, …
+      1.6             2272          1    2272.0    2272.0      2272      2272          0.0  void at::native::vectorized_elementwise_kernel<(int)4, at::native::AUnaryFunctor<c10::Half, c10::Ha…
+      1.6             2240          1    2240.0    2240.0      2240      2240          0.0  void at::native::vectorized_elementwise_kernel<(int)4, at::native::CUDAFunctorOnSelf_add<c10::Half>…
+
+-- nsys stats exit: 0
+### 5 ncu hardware-counter collection, same script
+~/projects/fusiongap/.venv/lib/python3.14/site-packages/torch/_subclasses/functional_tensor.py:377: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /__w/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:82.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+==WARNING== Note: Running with unmodified GPU clocks. If not controlled otherwise, profiling results may be inconsistent.
+==PROF== Connected to process 25663 (/usr/bin/python3.14)
+==ERROR== ERR_NVGPUCTRPERM - The user does not have permission to access NVIDIA GPU Performance Counters on the target device 0. For instructions on enabling permissions and to get more information see https://developer.nvidia.com/ERR_NVGPUCTRPERM
+~/projects/fusiongap/.venv/lib/python3.14/site-packages/triton/knobs.py:504: UserWarning: TRITON_DEFAULT_FP_FUSION is unset: defaulting to FP fusion ENABLED for backward compatibility in Triton 3.9. The default will change to DISABLED in Triton 3.10; set TRITON_DEFAULT_FP_FUSION=1 to keep fusion enabled or =0 to adopt the new default early and silence this warning.
+  warn_once(FP_FUSION_DEFAULT_WARNING)
+n=     1 torch.float32: PASS
+n=  1024 torch.float32: PASS
+n= 98437 torch.float32: PASS
+n= 98437 torch.float16: PASS
+4B.1 PASS
+==PROF== Disconnected from process 25663
+-- ncu exit: 1
