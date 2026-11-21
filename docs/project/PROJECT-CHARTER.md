@@ -73,7 +73,7 @@ A GEMM that beats cuBLAS · FlashAttention · compiler or IR construction (this 
 ## 7 · Assumptions and routing
 | ID | Assumption | Tested at | Status 2026-11-19 |
 |---|---|---|---|
-| A1 | 51 h/week of project work is available | Weekly review actuals | Week 1 (11-09 to 11-15) ~20 h. 11-18: 9.5 h stage work + 2.0 h parallel track, 11.5 h total against a 10.0 h/day plan. 11-19 in progress. -> AM-01, AM-05, RV-21, RV-23; builder ruling 11-18 keeps the rate |
+| A1 | 51 h/week of project work is available | Weekly review actuals | Week 1 (11-09 to 11-15) ~20 h. Week 2 to 11-21: 11-18 9.5 h stage + 2.0 h parallel; 11-19 5.0 + 2.0; 11-20 4.0 + 1.0 (re-logged 11-21); total 18.5 h stage + 5.0 h parallel over three worked days, 11-22 still available. Measured mean ~19.3 h/week against the 51 h/week assumption. Of ~38.5 h logged, ~16.2 h maps to a stage time box and ~22.3 h does not. -> AM-01, AM-05, AM-06, RV-21, RV-22, RV-23; builder ruling 11-18 keeps the rate |
 | A2 | A public GitHub repository is acceptable | 1E | VERIFIED 2026-11-14 |
 | A3 | Kaggle GPU access on a verified account | 4H | T4 ×2 listed 2026-11-09; no session run yet |
 | A4 | AC power and one fixed power setting for all timing | 4C, 7E | Always on AC; power limit read 30 W and 50 W on 2026-11-12 → OPEN (R21) |
