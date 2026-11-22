@@ -27,3 +27,7 @@ dist/
 
 # results/ is deliberately NOT ignored: raw data, including discarded and
 # throttled runs, is committed (brief §16, control C8).
+
+# 4F copies spikes/4E/copy_kernel.cu into its package directory to build the
+# wheel. The original is committed; a second copy would drift from it.
+spikes/4F/fusiongap_spike4f/copy_kernel.cu
