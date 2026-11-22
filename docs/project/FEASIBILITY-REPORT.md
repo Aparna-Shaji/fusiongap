@@ -82,3 +82,43 @@ real work and are not gate-blocking: gate 04 asks whether every spike recorded a
 result against its criterion with evidence, and the table above answers that.
 The risk register and verification log updates for 11-21 and 11-22 are carried
 with them.
+
+## 4F repeated under ADR-0004 option (d) - the gate-04 remedy
+
+Gate 04's NO-GO branch "TestPyPI rejects the artifact" fired, and its remedy is
+to switch ADR-0004 and repeat 4F with the chosen option. Done, as a controlled
+comparison: same server, same credentials, same twine invocation, two wheels
+differing in one property.
+
+| Wheel | What it contains | Result |
+|---|---|---|
+| `fusiongap_spike4f-0.0.1-cp314-cp314-linux_x86_64.whl` | a compiled CUDA extension | **400 rejected**: "has an unsupported platform tag 'linux_x86_64'" |
+| `fusiongap_spiked-0.0.1-py3-none-any.whl` | Triton source only, nothing compiled | **accepted**, published at test.pypi.org/project/fusiongap-spiked/0.0.1/ |
+
+**ADR-0004 = option (d)**: the published artefact is pure Python, Triton kernels
+compiled by Triton on the user's machine at first call; the CUDA extension is an
+optional, separately built component. This matches what the library is - the
+Triton arm is primary, and the CUDA arm exists to be compared against it.
+
+Build cost of the (d) wheel: seconds, 1780 bytes, because nothing is compiled.
+
+## GATE 04 - PROCEED WITH CONDITION, 2026-11-22
+
+Question: did every spike record pass or fail against its written criterion,
+with evidence from the real GTX 1650 or a named runner? **Yes** - eleven rows
+above, each with an evidence path.
+
+NO-GO branches: Triton and Inductor work (4B, re-confirmed on a T4); a clock is
+readable (4C cell 10); local nvcc 13.2 matches torch's CUDA 13.2; TestPyPI
+rejected the artefact and the remedy is discharged above.
+
+Adverse-but-valid GO branches taken and recorded: ncu blocked, so F6 = no and no
+counter data appears anywhere in this project; the 4E readiness band is green.
+
+Conditions, none gate-blocking, all owed before the stage-05 freeze:
+  C1 ENVIRONMENT.md - 5D rebuilds the stack from it and from nothing else
+  C2 SUPPORT-MATRIX.md
+  C3 ADR-0002, 0003, 0004, 0005 drafted
+  C4 risk register and verification log current to 2026-11-22
+  C5 the seven C4 findings against ADR-0001 and ADR-0006
+  CR-12 ruled at gate 05

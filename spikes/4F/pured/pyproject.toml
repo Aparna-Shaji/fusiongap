@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fusiongap-spiked"
+version = "0.0.1"
+description = "Packaging spike for FusionGap, ADR-0004 option (d). Not a library."
+requires-python = ">=3.10"
+
+[tool.setuptools]
+packages = ["fusiongap_spiked"]
