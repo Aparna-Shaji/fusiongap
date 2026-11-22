@@ -20,7 +20,10 @@ jobs:
           python -V
           pip install --upgrade pip
           pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
-          pip install triton==3.9.0 pytest
+          # numpy is not optional here: triton/runtime/interpreter.py
+          # imports it, and @jit pulls the interpreter in at decoration
+          # time, so TRITON_INTERPRET cannot work without it.
+          pip install triton==3.9.0 pytest numpy
           python -c "import torch,triton;print('torch',torch.__version__,'triton',triton.__version__)"
           python -c "import torch;print('cuda available:',torch.cuda.is_available())"
       - name: Run the 4B kernel under TRITON_INTERPRET
@@ -46,7 +49,12 @@ jobs:
           wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
           sudo dpkg -i cuda-keyring_1.1-1_all.deb
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cuda-nvcc-13-2
+          # cuda-nvcc is the compiler alone. ATen/cuda/CUDAContextLight.h
+          # includes cusparse.h, cublas_v2.h and cusolverDn.h, so the dev
+          # headers for libraries this project never calls are needed to
+          # compile a file that asks ATen for getCurrentCUDAStream().
+          sudo apt-get install -y -qq cuda-nvcc-13-2 cuda-cudart-dev-13-2 \
+            libcublas-dev-13-2 libcusparse-dev-13-2 libcusolver-dev-13-2
           /usr/local/cuda-13.2/bin/nvcc --version
       - name: Compile 4E and 4I for sm_75, compile only
         run: |
