@@ -1,0 +1,5 @@
+# 4F - packaging spike. Built with --no-isolation so the build uses the
+# project venv's torch rather than downloading 2.5 GB into a sandbox.
+[build-system]
+requires = ["setuptools>=68", "wheel", "torch"]
+build-backend = "setuptools.build_meta"
