@@ -1,0 +1,67 @@
+### 4E readiness evidence - 2026-11-22T07:21:53Z
+
+### 1 toolchain
+Cuda compilation tools, release 13.2, V13.2.86
+Build cuda_13.2.r13.2/compiler.37953736_0
+g++-15 (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+1.13.2.git.kitware.jobserver-pipe-1
+MemTotal:        5036820 kB
+SwapTotal:       8388608 kB
+
+### 2 invariants I1 and I3 - the test suite
+~/projects/fusiongap/.venv/lib/python3.14/site-packages/torch/_subclasses/functional_tensor.py:377: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /__w/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:82.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+ninja: no work to do.
+[build] 0.2 s
+PASS  I1  copy n=1 (arange)
+PASS  I1  copy n=256 (arange)
+PASS  I1  copy n=768 (arange)
+PASS  I1  copy n=98437 (arange)
+PASS  I1  copy n=98437 (random)
+PASS  I1  copy n=0 (no launch)
+PASS  I3  rejects a CPU tensor
+PASS  I3  rejects float64
+PASS  I3  rejects a non-contiguous view
+
+9 passed, 0 failed
+-- test_copy.py exit: 0
+
+### 3 invariant I2 - correct kernel, caching allocator disabled
+========= COMPUTE-SANITIZER
+~/projects/fusiongap/.venv/lib/python3.14/site-packages/torch/_subclasses/functional_tensor.py:377: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /__w/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:82.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+good: kernel ran, torch.equal=True
+========= ERROR SUMMARY: 0 errors
+-- good exit: 0
+
+### 4 invariant I2 - NEGATIVE CONTROL, tail guard deleted
+--- first errors reported ---
+========= COMPUTE-SANITIZER
+~/projects/fusiongap/.venv/lib/python3.14/site-packages/torch/_subclasses/functional_tensor.py:377: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /__w/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:82.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+========= Invalid __global__ read of size 4 bytes
+=========     at <unnamed>::copy_kernel(const float *, float *, long long)+0x80
+=========     by thread (96,0,0) in block (384,0,0)
+=========     Access to 0x503460180 is out of bounds
+=========     and is 128 bytes before the nearest allocation at 0x503460200 of size 393440 bytes
+========= 
+========= Invalid __global__ read of size 4 bytes
+=========     at <unnamed>::copy_kernel(const float *, float *, long long)+0x80
+=========     by thread (97,0,0) in block (384,0,0)
+=========     Access to 0x503460184 is out of bounds
+=========     and is 124 bytes before the nearest allocation at 0x503460200 of size 393440 bytes
+========= 
+========= Invalid __global__ read of size 4 bytes
+=========     at <unnamed>::copy_kernel(const float *, float *, long long)+0x80
+=========     by thread (98,0,0) in block (384,0,0)
+=========     Access to 0x503460188 is out of bounds
+=========     and is 120 bytes before the nearest allocation at 0x503460200 of size 393440 bytes
+========= 
+========= Invalid __global__ read of size 4 bytes
+=========     at <unnamed>::copy_kernel(const float *, float *, long long)+0x80
+=========     by thread (99,0,0) in block (384,0,0)
+--- [detail truncated here; the summary below is the whole count] ---
+========= ERROR SUMMARY: 205 errors
+========= ERROR SUMMARY: 105 errors were not printed. Use --print-limit option to adjust the number of printed errors
+out-of-bounds lines captured: 98
+-- noguard exit: 1
