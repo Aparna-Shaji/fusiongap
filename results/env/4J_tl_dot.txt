@@ -1,0 +1,17 @@
+~/projects/fusiongap/.venv/lib/python3.14/site-packages/torch/_subclasses/functional_tensor.py:377: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /__w/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:82.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+triton 3.9.0 | torch 2.15.0+cu132
+device NVIDIA GeForce GTX 1650 | capability (7, 5)
+
+=== tl.dot with torch.float16 inputs ===
+  shapes M=128 N=128 K=64, tiles 64x64x32
+  rel_acc  = 2.664e-07  bar 1.0e-05  -> PASS   (accumulator only)
+  rel_pipe = 2.427e-04  bar 2.0e-02  -> PASS   (includes input rounding)
+
+=== tl.dot with torch.float32 inputs ===
+  shapes M=128 N=128 K=64, tiles 64x64x32
+  rel_acc  = 2.938e-07  bar 1.0e-05  -> PASS   (accumulator only)
+  rel_pipe = 2.938e-07  bar 1.0e-05  -> PASS   (includes input rounding)
+  (for fp32 the two are identical by construction - nothing is cast)
+
+RESULT: all attempted dtypes within tolerance
