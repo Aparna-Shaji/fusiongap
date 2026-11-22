@@ -40,10 +40,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.14'
-      - name: Install CPU torch for its headers
+      - name: Install the CUDA-flavoured torch wheel, for its headers only
+        # The CPU wheel ships c10/cuda headers but not cuda_cmake_macros.h,
+        # which is generated during a CUDA build. Anything that includes
+        # ATen/cuda therefore cannot compile against a CPU wheel. No GPU is
+        # needed to compile - only the headers.
         run: |
           pip install --upgrade pip
-          pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cu132
+          python -c "import torch;print('torch',torch.__version__,'cuda build:',torch.version.cuda)"
       - name: Install nvcc only, no driver, no runtime
         run: |
           wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
