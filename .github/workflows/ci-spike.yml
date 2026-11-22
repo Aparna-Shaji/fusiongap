@@ -1,0 +1,70 @@
+name: ci-spike
+# 4G - feasibility only, on a throwaway branch. Answers what a GPU-less
+# runner can still check for this project (R10, V7, F11).
+on:
+  push:
+    branches: [spike/ci]
+  workflow_dispatch:
+
+jobs:
+  cpu-triton:
+    name: Triton kernel under the interpreter, no GPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Install CPU torch, triton and pytest
+        run: |
+          python -V
+          pip install --upgrade pip
+          pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install triton==3.9.0 pytest
+          python -c "import torch,triton;print('torch',torch.__version__,'triton',triton.__version__)"
+          python -c "import torch;print('cuda available:',torch.cuda.is_available())"
+      - name: Run the 4B kernel under TRITON_INTERPRET
+        env:
+          TRITON_INTERPRET: '1'
+          TRITON_DEFAULT_FP_FUSION: '1'
+        run: pytest -v spikes/4G/test_triton_interpret.py
+
+  nvcc-compile:
+    name: Compile the CUDA kernel without a GPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Install CPU torch for its headers
+        run: |
+          pip install --upgrade pip
+          pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
+      - name: Install nvcc only, no driver, no runtime
+        run: |
+          wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
+          sudo dpkg -i cuda-keyring_1.1-1_all.deb
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cuda-nvcc-13-2
+          /usr/local/cuda-13.2/bin/nvcc --version
+      - name: Compile 4E and 4I for sm_75, compile only
+        run: |
+          TORCH_DIR=$(python -c "import torch,os;print(os.path.dirname(torch.__file__))")
+          PY_INC=$(python -c "import sysconfig;print(sysconfig.get_paths()['include'])")
+          NVCC=/usr/local/cuda-13.2/bin/nvcc
+          for SRC in spikes/4E/copy_kernel.cu spikes/4I/fp64_kernels.cu; do
+            echo "::group::$SRC"
+            $NVCC -c "$SRC" -o /tmp/$(basename "$SRC").o \
+              -I"$TORCH_DIR/include" \
+              -I"$TORCH_DIR/include/torch/csrc/api/include" \
+              -I"$PY_INC" \
+              -DTORCH_API_INCLUDE_EXTENSION_H \
+              -DTORCH_EXTENSION_NAME=ci_spike \
+              -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ \
+              -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ \
+              --expt-relaxed-constexpr -gencode=arch=compute_75,code=sm_75 \
+              -std=c++20 -O2
+            ls -l /tmp/$(basename "$SRC").o
+            echo "::endgroup::"
+          done
