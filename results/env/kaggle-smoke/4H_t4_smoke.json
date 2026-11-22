@@ -1,0 +1,14 @@
+{
+ "spike": "4H",
+ "date_utc": "2026-11-22",
+ "platform": "Kaggle notebook, GPU T4 x2 accelerator, internet on, pinned environment",
+ "quota_read_from_panel": "30 hours per week, 30 remaining before this run",
+ "phase1_stdout": "{\"torch\": \"2.11.0+cu130\", \"torch_cuda\": \"13.0\", \"cuda_available\": true, \"device\": \"Tesla T4\", \"capability\": [7, 5], \"arch_list\": [\"sm_75\", \"sm_80\", \"sm_86\", \"sm_90\", \"sm_100\", \"sm_120\"], \"vram_free_MiB\": 14806, \"vram_total_MiB\": 14911, \"triton\": \"3.6.0\", \"nvcc\": \"Cuda compilation tools, release 13.0, V13.0.88\\nBuild cuda_13.0.r13.0/compiler.36424714_0\", \"smi\": \"Tesla T4, 580.178.04, 15360 MiB, 70.00 W\\nTesla T4, 580.178.04, 15360 MiB, 70.00 W\", \"triton_add\": \"PASS\", \"cuda_build_s\": 62.5, \"cuda_square\": \"PASS\", \"gradcheck_correct\": \"PASS\", \"gradcheck_planted\": \"PASS - rejected\"}",
+ "phase1_stderr": "",
+ "pin_torch_rc": 0,
+ "pin_torch_tail": "ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\ntorchvision 0.26.0+cu130 requires torch==2.11.0, but you have torch 2.15.0+cu132 which is incompatible.",
+ "pin_triton_rc": 0,
+ "pin_triton_tail": "",
+ "phase2_stdout": "{\"torch\": \"2.15.0+cu132\", \"torch_cuda\": \"13.2\", \"cuda_available\": true, \"device\": \"Tesla T4\", \"capability\": [7, 5], \"arch_list\": [\"sm_75\", \"sm_80\", \"sm_86\", \"sm_90\", \"sm_100\", \"sm_120\"], \"vram_free_MiB\": 14806, \"vram_total_MiB\": 14911, \"triton\": \"3.9.0\", \"nvcc\": \"Cuda compilation tools, release 13.0, V13.0.88\\nBuild cuda_13.0.r13.0/compiler.36424714_0\", \"smi\": \"Tesla T4, 580.178.04, 15360 MiB, 70.00 W\\nTesla T4, 580.178.04, 15360 MiB, 70.00 W\", \"triton_add\": \"PASS\", \"cuda_build_s\": 67.0, \"cuda_square\": \"PASS\", \"gradcheck_correct\": \"PASS\", \"gradcheck_planted\": \"PASS - rejected\"}",
+ "phase2_stderr": ""
+}
