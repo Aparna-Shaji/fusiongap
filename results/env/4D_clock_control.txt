@@ -1,0 +1,36 @@
+### V3.0 state before any attempt
+2026-11-22T05:05:15Z
+nvidia-smi resolved to: /usr/lib/wsl/lib/nvidia-smi
+clocks.current.graphics [MHz], clocks.current.memory [MHz], enforced.power.limit [W], persistence_mode
+300 MHz, 405 MHz, 30.00 W, Enabled
+### V3.1 application clocks (-ac)
+The requested functionality has been deprecated.
+All done.
+-- -ac exit: 0
+### V3.2 locked graphics clocks (-lgc) at the maximum
+Unable to set GPU locked clocks "(gpuClockMin 1785, gpuClockMax 1785)" for GPU 00000000:01:00.0: Unknown Error
+Terminating early due to previous errors.
+-- -lgc exit: 255
+300 MHz
+### V3.3 locked memory clocks (-lmc)
+Setting locked Memory clocks is not supported for GPU 00000000:01:00.0.
+All done.
+-- -lmc exit: 0
+### V3.4 power limit (-pl) set to the value already in force
+Failed to set power management limit for GPU 00000000:01:00.0: Insufficient Permissions
+Terminating early due to previous errors.
+-- -pl exit: 4
+### V3.5 reset every mechanism, unconditionally
+Unable to reset locked gpu clocks for GPU 00000000:01:00.0: Unknown Error
+Terminating early due to previous errors.
+-- -rgc exit: 255
+Setting locked Memory clocks is not supported for GPU 00000000:01:00.0.
+Treating as warning and moving on.
+All done.
+-- -rmc exit: 0
+The requested functionality has been deprecated.
+All done.
+-- -rac exit: 0
+### V3.6 state after - must match V3.0
+clocks.current.graphics [MHz], clocks.current.memory [MHz], enforced.power.limit [W], persistence_mode
+300 MHz, 405 MHz, 30.00 W, Enabled

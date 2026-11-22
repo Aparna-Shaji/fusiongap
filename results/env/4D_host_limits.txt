@@ -1,0 +1,57 @@
+### 0 did AM-08 land exactly once
+AM-08 headings: 1
+A4 rows: 1
+d4bb702 docs(gov): AM-08 - assumption A4 replaced by a host-state class (CR-11)
+fd147e3 docs(04): 4C cell 11 adverse pass - nsys traces, ncu counters denied
+5d7b51a docs(project): record today's four findings, correct three stale rows, clear cosmetic debt
+-- git status --short below, empty means clean --
+### 1 .wslconfig as it stands
+(no .wslconfig under /mnt/c/Users)
+(nothing to read - WSL is running on defaults)
+### 2 what WSL actually got
+               total        used        free      shared  buff/cache   available
+Mem:           3.5Gi       1.6Gi       1.8Gi       4.0Mi       233Mi       2.0Gi
+Swap:          1.0Gi       120Mi       903Mi
+nproc: 12
+MemTotal:        3685144 kB
+SwapTotal:       1048576 kB
+### 3 Windows TDR, read-only (absence means the default applies)
+
+
+ERROR: The system was unable to find the specified registry key or value.
+-- TdrDelay query exit: 1
+
+
+ERROR: The system was unable to find the specified registry key or value.
+-- TdrLevel query exit: 1
+### 4 GPU memory, display ownership, clock exposure at idle
+name, memory.total [MiB], memory.used [MiB], memory.free [MiB], display_active, display_mode, persistence_mode
+NVIDIA GeForce GTX 1650, 4096 MiB, 0 MiB, 3935 MiB, Disabled, [Requested functionality has been deprecated], Enabled
+clocks.current.graphics [MHz], clocks.max.graphics [MHz], clocks.applications.graphics [MHz], enforced.power.limit [W]
+300 MHz, 1785 MHz, [Requested functionality has been deprecated], 30.00 W
+-- supported clocks, first 20 lines --
+
+==============NVSMI LOG==============
+
+Timestamp                                              : Sun Nov 22 04:47:51 2026
+Driver Version                                         : 621.01 [Deprecated; will be removed in CUDA 14.0. Use KMD Version instead]
+CUDA Version                                           : 13.5 [Deprecated; will be removed in CUDA 14.0. Use CUDA UMD Version instead]
+KMD Version                                            : 621.01
+CUDA UMD Version                                       : 13.5
+
+Attached GPUs                                          : 1
+GPU 00000000:01:00.0
+    Supported Clocks
+        Memory                                         : 6001 MHz
+            Graphics                                   : 1785 MHz
+            Graphics                                   : 1770 MHz
+            Graphics                                   : 1755 MHz
+            Graphics                                   : 1740 MHz
+            Graphics                                   : 1725 MHz
+            Graphics                                   : 1710 MHz
+            Graphics                                   : 1695 MHz
+### 5 free VRAM as torch sees it
+~/projects/fusiongap/.venv/lib/python3.14/site-packages/torch/_subclasses/functional_tensor.py:377: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /__w/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:82.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+free MiB 3294 | total MiB 4095 | NVIDIA GeForce GTX 1650
+-- torch exit: 0
