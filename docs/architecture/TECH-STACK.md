@@ -173,6 +173,6 @@ the 4A and 4B evidence was produced under the first option.
 One point separates the first and third options, so the rubric did not decide this and is
 not presented as having done so. The tie-break is a cost: uv end to end wants to own the
 interpreter, so adopting it discards the environment that produced the only GPU evidence
-this project has and reopens D-18, for roughly 4.5 hours of the 15-hour spike budget and
+this project has and reopens D-18, for several hours of the 15-hour spike budget and
 no gain in any measurement. Full reasoning, alternatives and reversal trigger:
 `adr/ADR-0001-env-pins.md`.

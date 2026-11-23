@@ -1,0 +1,79 @@
+=== 4K environment capture · 2026-11-23T05:06:07Z UTC ===
+
+--- [1] host: WSL, distro, shell env ---
+uname -r            : 6.18.58.1-microsoft-standard-WSL2
+PRETTY_NAME="Ubuntu 26.04.1 LTS"
+TMPDIR              : $HOME/.tmp
+CUDA_HOME           : /usr/local/cuda-13.2
+free -h (what WSL was given):
+               total        used        free      shared  buff/cache   available
+Mem:           4.8Gi       520Mi       4.3Gi       4.1Mi       157Mi       4.3Gi
+Swap:          8.0Gi        21Mi       8.0Gi
+
+--- [2] GPU driver stack ---
+Driver Version                                         : 621.01 [Deprecated; will be removed in CUDA 14.0. Use KMD Version instead]
+CUDA Version                                           : 13.5 [Deprecated; will be removed in CUDA 14.0. Use CUDA UMD Version instead]
+KMD Version                                            : 621.01
+CUDA UMD Version                                       : 13.5
+    Product Name                                       : NVIDIA GeForce GTX 1650
+    Display Active                                     : Disabled
+name, display_active
+NVIDIA GeForce GTX 1650, Disabled
+power.limit [W], enforced.power.limit [W]
+[N/A], 50.00 W
+
+--- [3] CUDA toolkit and host compiler ---
+/usr/local/cuda-13.2/bin/nvcc
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2026 NVIDIA Corporation
+Built on Fri_May_08_10:53:34_AM_PDT_2026
+Cuda compilation tools, release 13.2, V13.2.86
+Build cuda_13.2.r13.2/compiler.37953736_0
+ii  cuda-toolkit-13-2                 13.2.2-1                                   amd64        CUDA Toolkit 13.2 meta-package
+ii  cuda-toolkit-13-2-config-common   13.2.86-1                                  all          Common config package for CUDA Toolkit 13.2.
+ii  cuda-toolkit-13-config-common     13.3.29-1                                  all          Common config package for CUDA Toolkit 13.
+g++-15 (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+g++-15 -dumpversion : 15
+gcc    -dumpversion : 15
+
+--- [4] python: system interpreter vs project interpreter (finding F3) ---
+python3 --version          : Python 3.14.4
+.venv/bin/python --version : Python 3.14.4
+
+--- [5] project packages, filtered ---
+build                  1.6.1
+ninja                  1.13.2
+pip                    26.3
+setuptools             84.2.1
+torch                  2.15.0
+triton                 3.9.0
+twine                  7.0.0
+wheel                  0.48.0
+-- expected but absent:
+ABSENT: pytest
+ABSENT: ruff
+ABSENT: mypy
+ABSENT: numpy
+ABSENT: pip-tools
+
+--- [6] torch's own view of itself (finding F1) ---
+$HOME/projects/fusiongap/.venv/lib/python3.14/site-packages/torch/_subclasses/functional_tensor.py:377: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /__w/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:82.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+torch 2.15.0+cu132 | torch.version.cuda 13.2 | triton 3.9.0
+torch requires triton: ['triton~=3.9.0; platform_system == "Linux" and python_version < "3.16"']
+
+--- [7] secret scanning (finding F4) ---
+Version: 8.16.0-1build2
+
+--- [8] host-state rows (D-33) ---
+row 3 · Nsight apt packages:
+ii  cuda-nsight-13-2                  13.2.86-1                                  amd64        CUDA nsight
+ii  cuda-nsight-compute-13-2          13.2.2-1                                   amd64        NVIDIA Nsight Compute
+ii  cuda-nsight-systems-13-2          13.2.2-1                                   amd64        NVIDIA Nsight Systems
+ii  nsight-compute-2026.1.1           2026.1.1.2-1                               amd64        NVIDIA Nsight Compute
+ii  nsight-systems-2025.6.3           2025.6.3.541-256337736014v0                amd64        Nsight Systems is a statistical sampling profiler with tracing features.
+ii  ubuntu-insights                   0.9.3ubuntu0.1                             amd64        Ubuntu metrics reporting service
+row 2 · GPU counter permission: recorded adverse at 4C cell 11 -> results/env/4C_cell11_profilers.txt
+/usr/local/cuda-13.2/bin/ncu
+
+=== END CAPTURE ===
