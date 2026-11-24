@@ -1,0 +1,78 @@
+=== 4L power-ceiling sample - label: high-performance ===
+protocol: 10s idle -> 120s load -> 10s idle, period 1.0s
+load: inline 4096x4096 fp32 matmul loop (this file, not 4C's generator)
+
+--- device limits at start, read from the device ---
+==============NVSMI LOG==============
+
+Timestamp                                              : Tue Nov 24 00:29:13 2026
+Driver Version                                         : 621.01 [Deprecated; will be removed in CUDA 14.0. Use KMD Version instead]
+CUDA Version                                           : 13.5 [Deprecated; will be removed in CUDA 14.0. Use CUDA UMD Version instead]
+KMD Version                                            : 621.01
+CUDA UMD Version                                       : 13.5
+
+Attached GPUs                                          : 1
+GPU 00000000:01:00.0
+    Temperature
+        GPU Current Temp                               : 47.30 C
+        GPU Current Max Temp                           : N/A
+        GPU Current T.Limit Temp                       : N/A
+        GPU Shutdown Temp                              : 99 C
+        GPU Slowdown Temp                              : 94 C
+        GPU Max Operating Temp                         : 102 C
+        GPU Target Temperature Specification           : 87 C
+        Memory Current Temp                            : N/A
+        Memory Max Operating Temp                      : N/A
+
+==============NVSMI LOG==============
+
+Timestamp                                              : Tue Nov 24 00:29:13 2026
+Driver Version                                         : 621.01 [Deprecated; will be removed in CUDA 14.0. Use KMD Version instead]
+CUDA Version                                           : 13.5 [Deprecated; will be removed in CUDA 14.0. Use CUDA UMD Version instead]
+KMD Version                                            : 621.01
+CUDA UMD Version                                       : 13.5
+
+Attached GPUs                                          : 1
+GPU 00000000:01:00.0
+    GPU Power Readings
+        Average Power Draw                             : N/A
+        Instantaneous Power Draw                       : 3.08 W
+        GPU Ceiling Power Limit
+            Current Power Limit                        : 30.00 W
+            Requested Power Limit                      : 50.00 W
+            Default Power Limit                        : 50.00 W
+        GPU Base Power
+            Current Base Power                         : N/A
+            Requested Base Power                       : N/A
+            Default Base Power                         : N/A
+        Min Power Limit                                : 1.00 W
+        Max Power Limit                                : 50.00 W
+    Power Samples
+        Duration                                       : Not Found
+        Number of Samples                              : Not Found
+        Max                                            : Not Found
+        Min                                            : Not Found
+        Avg                                            : Not Found
+    GPU Memory Power Readings 
+        Average Power Draw                             : N/A
+        Instantaneous Power Draw                       : N/A
+    Module Power Readings
+        Average Power Draw                             : N/A
+        Instantaneous Power Draw                       : N/A
+        Current Power Limit                            : N/A
+        Requested Power Limit                          : N/A
+        Default Power Limit                            : N/A
+        Min Power Limit                                : N/A
+        Max Power Limit                                : N/A
+    EDPp Multiplier                                    : N/A
+
+samples: 140 total, 120 load, 20 idle
+enforced.power.limit distinct set, load window : ['30.00']
+Current Power Limit  distinct set, load window : ['30.00']
+samples where the two forms disagree: 0 of 140
+load window : util max 100%  sm median 998 MHz  sm min/max 300/1080
+load window : draw median 28.34 W  max 29.01 W
+idle window : sm median 615 MHz
+temperature : max 63 C over the whole run
+steady state: first-third sm median 1005 MHz, last-third 982 MHz
+ALL CHECKS OK
