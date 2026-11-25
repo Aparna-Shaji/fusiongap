@@ -101,6 +101,8 @@ does not know what it protects.
 | `TMPDIR` | `$HOME/.tmp` | `echo "$TMPDIR"` — the **value in a live shell**, not the line in `~/.bashrc` | `/tmp` on this distribution is a **1.8 GB tmpfs**. With `TMPDIR` unset, `pip install torch` fails with "No space left on device" while the disk has over 900 GB free (D-17) |
 | `CUDA_HOME` | `/usr/local/cuda-13.2` | `echo "$CUDA_HOME"` | `torch.utils.cpp_extension` cannot locate `nvcc`; the CUDA arm does not build |
 | `TRITON_DEFAULT_FP_FUSION` | **Deliberately unset in the shell.** Set to `1` per-run, inside each spike's own environment | `grep -n TRITON_DEFAULT_FP_FUSION spikes/*/*.py` | See the scope note below — an exported value here would be the wrong fix |
+| `CC` and `CXX` | **Both unset in the interactive shell, deliberately.** The host compiler is named by the build file, not by shell state | `echo "CC=[$CC] CXX=[$CXX]"` - both must print empty brackets | `torch.utils.cpp_extension` reads `CXX` for C++ translation units and defaults to the unversioned `c++` (`cpp_extension.py:271`), and passes `-ccbin` to nvcc from **`CC`** only, and only when the extension's own flags do not already set one (lines 939 and 942). Unset therefore selects the alias silently - 15.2.0 today, whatever apt installs tomorrow. Exporting them is the wrong fix for the same reason as the fp-fusion variable below: it makes which compiler built a run depend on whose shell launched it. The stage-15 build file is the authority; ADR-0001 reversal trigger 4 is the check (F42) |
+| `TORCH_DONT_CHECK_COMPILER_ABI` | **Never set, in any shell or script of this project** | `echo "[$TORCH_DONT_CHECK_COMPILER_ABI]"` must print `[]` | Set to any of `ON 1 YES TRUE Y` it disables **both** of torch's build-time guards at once: the ABI-compatibility check (`cpp_extension.py:170`) and the CUDA-version and compiler-bound check (line 235). Those are the only automatic compiler guards this stack has, and on CUDA 13.2 the second already does nothing - see section 5 item 10 |
 
 ### The fp-fusion scope, stated exactly, because "pinned to 1" is misleading on its own
 
@@ -139,12 +141,24 @@ to Windows or to apt, not to the distribution image.
 
 1. Install a fresh Ubuntu 26.04.1 LTS WSL2 distribution. Record free space on `C:` before and
    after; RV-30's trigger is two consecutive session-start readings below 45 GB.
+   **Compute the budget before the import, not after:** the rootfs, the CUDA toolkit's
+   apt download and installed size, and the torch wheel. Free space read 59 GB on
+   2026-11-25, so a rebuild costing more than about 14 GB arms RV-30 by this project's
+   own action. If the budget does not clear the 30 GB floor, free space first -
+   `rm -rf ~/.cache/pip` recovers about 3.4 GB - or place the second distribution's
+   virtual disk on another volume (F45).
 2. **Before installing anything else, read every row of section 1 and compare.** Record each
    result, pass or fail. A mismatch is recorded, never silently accepted (AM-08).
 3. Install the distribution prerequisites named in ADR-0001 — `python3`, `python3-venv`, the build
    toolchain, the CUDA toolkit and `g++-15` **by explicit name, never the bare `gcc`/`g++` alias**
    (RV-28: nvcc 13.2 hard-errors above GCC major 15, and the distribution default is 15.2.0, so
-   there is zero headroom).
+   there is zero headroom). **Installing it is necessary and not sufficient: nothing
+   selects it automatically.** `torch.utils.cpp_extension` reads `CXX` for C++
+   translation units and defaults to the unversioned `c++`, and passes `-ccbin` to nvcc
+   from `CC` only, and only when the extension's own flags do not already set one. The
+   build file written at stage 15 therefore names `-ccbin /usr/bin/g++-15` explicitly
+   and sets `CXX`; reversal trigger 4 of ADR-0001 is what catches a build that did
+   neither (F42).
 4. Create the virtual environment on the pinned interpreter. Check it with **`python3 --version`**,
    never with the apt package version: `apt-cache policy python3` reports 3.14.3 while the
    interpreter reports 3.14.4, because `python3` is a metapackage and the binary belongs to
@@ -158,7 +172,9 @@ to Windows or to apt, not to the distribution image.
 8. Run the committed spikes as smoke tests, in this order, and keep every output:
    `spikes/4G/test_triton_interpret.py` (no GPU needed) → `spikes/4I/` (fp64 `gradcheck`, which
    carries a planted-wrong control that must be rejected) → `spikes/4J/` (`tl.dot` against two
-   derived bars) → `spikes/4E/` (the CUDA extension, roughly 193 s for one translation unit).
+   derived bars) → `spikes/4E/` (the CUDA extension, roughly 193 s for one translation unit). That build prints
+   *There are no g++ version bounds defined for CUDA version 13.2* - expected, not a
+   defect; section 5 item 10.
 9. Run `.venv/bin/python spikes/4L/sample_power.py rebuild` and compare the load-window distinct
    set against row 1.
 10. Record the whole comparison in `docs/project/VERIFICATION-LOG.md`.
@@ -194,3 +210,6 @@ this file exists for.
 | 7 | Which process sets `TRITON_DEFAULT_FP_FUSION` for a GPU-less CI run is undecided (F33) | 15C · 16 |
 | 8 | Build-memory peaks recorded in GiB may be decimal GB mislabelled — 2785948 kB is 2.79 GB or **2.66 GiB**. The direction is favourable, more headroom than recorded (F23) | next docs pass |
 | 9 | `pre-commit` is installed inside the venv only, so gate 05's criterion must check that **the hook fires**, not that the command exists (RV-29) | gate 05 |
+| 10 | PyTorch defines **no host-compiler version bounds for CUDA 13.2**: `CUDA_GCC_VERSIONS` ends at 13.0, so `_check_cuda_version` logs *There are no g++ version bounds defined for CUDA version 13.2* and continues. **That warning is expected output of every CUDA build here, not a defect.** The only ceiling in force is nvcc's own `crt/host_config.h` above GCC major 15 (V22, RV-28) | recorded |
+| 11 | **Installing `g++-15` does not select it.** The C++ path reads `CXX` and defaults to `c++`; the nvcc path takes `-ccbin` from `CC` and only when the build's own flags do not set one. The stage-15 build file must name `-ccbin /usr/bin/g++-15` explicitly and set `CXX`, because a shell variable is lost the moment a build runs without it (F42) | 15 |
+| 12 | **The disk cost of the 5D rebuild has never been computed.** Free space read 59 GB on 2026-11-25 against RV-30's 45 GB trigger and 30 GB floor, so a rebuild costing more than about 14 GB arms that trigger by this project's own action. Section 3 step 1 now requires the budget before the import (F45) | 5D |

@@ -63,7 +63,11 @@ Four parts.
    never the unversioned `gcc` alias. nvcc 13.2 errors above GCC major 15 and this
    distribution's default is 15.2.0, so there is no headroom and an ordinary system
    update would otherwise break every CUDA build silently (RV-28).
-4. **Pins**, as measured on 2026-11-19. Blank entries are filled at 5A and frozen there.
+4. **Pins**, as measured on 2026-11-19 and **read back against the machine at 5A on
+   2026-11-25**. Every installed row matched its pinned value on that read, each by the
+   command its own row names - including the two the Python row requires and the separate
+   invariant the Triton row requires. The rows reading [UNKNOWN] are uninstalled by
+   design and are filled at 5C: a deferral with a named owner, not a gap. Frozen here.
 
 | Layer | Pin | Checked by |
 |---|---|---|
@@ -72,6 +76,7 @@ Four parts.
 | Ubuntu | 26.04.1 LTS | `lsb_release -d` - present at /usr/bin/lsb_release, confirmed 2026-11-23. Not guaranteed on a minimal rootfs, so 5D falls back to `grep PRETTY_NAME /etc/os-release` |
 | NVIDIA KMD (Windows-side) | 621.01 | `nvidia-smi` |
 | CUDA UMD | 13.5 | `nvidia-smi` |
+| `nvidia-smi` (the telemetry instrument) | **620.67.01** - the tool's own version, distinct from KMD 621.01 and CUDA UMD 13.5 and lower than both | `nvidia-smi`, header line 3; read 2026-11-25. Pinned because this binary is the source of every telemetry number the project records (D-31, ADR-0003), and because all six instances of "verify the effect, not the return code" are behaviours *of this binary at this version* - the `-lms` interval that delivers 1.92 Hz, `-ac` and `-lmc` exiting 0 while setting nothing, the throttle counters that are a wall clock (RV-31), the `-q -d POWER` field split that `--query-gpu` collapses. A different version re-opens every one of them (F49) |
 | CUDA toolkit | 13.2.2-1, nvcc 13.2.86, from the wsl-ubuntu repository | `nvcc --version` |
 | Host compiler | g++-15 (15.2.0-16ubuntu1) | `g++-15 --version` |
 | Python | 3.14.4 - the system interpreter **and** the project venv interpreter, which must agree | Two commands, both required: `python3 --version` and `.venv/bin/python --version`; both printed 3.14.4 on 2026-11-23. One command cannot verify this pin, because the two can disagree - on 2026-11-12 `python3 -m venv` over an existing environment kept a 3.12.16 interpreter while rewriting `pyvenv.cfg`. `python` is not a system name on this machine |
@@ -149,7 +154,7 @@ where it would be discovered. It is written to be taken under time pressure, whi
 when nobody re-reads the alternatives table, so the condition travels with it here.
 
 ## Reversal trigger
-Looked for at 5C and 5D, and thereafter in every run's metadata. Four triggers, one per
+Looked for at 5C and 5D, and thereafter in every run's metadata. Five triggers, one per
 failure, because the original conflated them:
 
 1. **The lock mechanism failed** - any of: the lock does not resolve; `pip install
@@ -164,3 +169,7 @@ failure, because the original conflated them:
    metadata does not read `g++-15`. No version string above can detect this, and it is the
    failure part 3 exists to prevent: `g++-15` can be installed and valid while something in
    the build path still resolves `gcc`.
+5. **The telemetry instrument changed** - `nvidia-smi`'s own version reads anything other
+   than 620.67.01. Every behaviour recorded under "verify the effect, not the return code"
+   was measured on that binary; a change makes all of them unverified until re-checked, and
+   no number already recorded is comparable to one taken after it without that re-check.
