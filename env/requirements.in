@@ -1,0 +1,104 @@
+# env/requirements.in — FusionGap measurement environment, direct requirements.
+#
+# WHAT THIS FILE IS. The packages this project chose, with the reason for each.
+# Anything in env/requirements.lock that is not named here arrived as a
+# dependency of something that is. Read the two files together.
+#
+# WHAT THIS FILE IS NOT. Not the published package's dependency list. ADR-0004
+# makes the published artefact pure Python, with Triton shipped as source and
+# the CUDA extension optional and separately built, so the package's declared
+# dependencies live in pyproject.toml and are written at stage 15. Do not copy
+# this file into pyproject.toml.
+#
+# THE INDEX: PyPI only, no extra index. Decision D-45, on measured evidence
+# taken 2026-11-26, and it is load-bearing twice over.
+#
+#   Correctness. torch 2.15.0 for linux x86_64 exists on PyPI as exactly one
+#   file, torch-2.15.0-cp314-cp314-manylinux_2_28_x86_64.whl, digest
+#   1412c79b0338ea61fa31e74a59d74e412c56307e226d3c6e61ccd6d4613ffc3f, 539172352
+#   bytes. download.pytorch.org/whl/cu132 publishes only 2.15.0+cu132 (21
+#   files); /whl/cpu publishes only 2.15.0+cpu plus plain-versioned macOS arm64
+#   wheels (36 files). Neither serves the wheel this project installed.
+#
+#   Cost. --generate-hashes records hashes for every wheel of a pin, on every
+#   platform. Where the index exposes a JSON metadata API, those hashes are
+#   read without downloading anything. download.pytorch.org is a bare simple
+#   index with no JSON API, so adding it would force pip-compile to download
+#   every platform wheel of every pin it served — roughly twenty torch builds
+#   at about 514 MiB each. PyPI has the JSON API. Keep it that way.
+#
+# NO TRAILING SLASH on the index URL. A trailing slash has been reported to
+# make pip-compile stop reading hashes from the JSON API and fall back to
+# downloading files (finding F54). On pip-tools 7.7.0, both forms produced
+# byte-identical locks for a probe package on 2026-11-26, so the defect does
+# not appear to be live here. The magnitude of the alternative was never
+# measured and the safe form costs nothing, so we write the safe form.
+#
+# TORCH AND CUDA. torch==2.15.0 resolves to the CUDA 13.2 build because that is
+# PyPI's default build for this version, not because of anything in this file.
+# There is no +cu132 here and that is correct. torch requires
+# cuda-toolkit with ten extras, which expands to ten nvidia-* packages in the
+# lock; that expansion is the bulk of the 5D download budget.
+#
+## THE RESOLVE COMMAND is part of the contract and pip-compile records it in the
+# lock's own header, reordering the flags. From the repository root:
+#
+#   pip-compile --generate-hashes --strip-extras --allow-unsafe \
+#               --constraint env/measured.txt \
+#               --output-file env/requirements.lock env/requirements.in
+#
+# --strip-extras is explicit because pip-tools makes it the default in 8.0.0 and
+# the same input would otherwise produce a differently-shaped lock across that
+# boundary (F58).
+#
+# --allow-unsafe is required, not optional. Without it pip-tools refuses to pin
+# pip and setuptools, writes a "may be rejected by pip install" warning instead,
+# and the lock fails under --require-hashes, where one unpinned entry fails the
+# whole install (F40, F61). pip-tools is making this the default too.
+#
+# --constraint env/measured.txt fixes every transitive package to the version
+# this project measured, rather than the newest release on the day of the
+# resolve (F62). Read that file's own header before changing it.
+
+--index-url https://pypi.org/simple
+
+# --- the subject of the study -------------------------------------------------
+torch==2.15.0            # the measured system; D-03 makes torch.compile the primary baseline
+triton==3.9.0            # pinned explicitly although torch declares triton~=3.9.0: this
+                         # project writes Triton kernels directly, so its version is a
+                         # result-affecting instrument, not an implementation detail of torch
+
+# --- correctness and test tooling ---------------------------------------------
+# Unpinned on purpose. No compatibility evidence exists yet for any of these four
+# on Python 3.14.4, and writing a version we have not installed is finding F13
+# repeated. The resolver picks, the lock records, ADR-0001's pin table takes the
+# resolved versions with their evidence.
+numpy                    # RV-36: needed to test any Triton kernel off-GPU, and torch's
+                         # numpy bridge is dead without it — warning observed 2026-11-26
+pytest                   # the correctness gate (brief section 8) has to be runnable here
+ruff                     # lint
+mypy                     # type checking
+
+# --- build and packaging ------------------------------------------------------
+ninja==1.13.2            # CUDA extension builds; stage 15
+build==1.6.1             # ADR-0004's publishing path
+wheel==0.48.0
+twine==7.0.0
+setuptools==84.2.1       # torch declares setuptools>=77.0.3; pinned here because the
+                         # CUDA extension build imports it
+
+# --- repository hygiene -------------------------------------------------------
+pre-commit==4.7.0        # D-19: gitleaks runs as a local hook through this
+
+# --- the lock's own instrument ------------------------------------------------
+# pip-tools is a pinned instrument, not incidental tooling, because it calls
+# private pip internals and its version is therefore coupled to pip's (RV-40):
+#   7.5.3 supports pip 26.0 and CRASHES on pip 26.3 with "make_requirement_
+#     preparer() missing 1 required keyword-only argument: 'allow_editables'"
+#     — observed on this machine 2026-11-26 (F57)
+#   7.6.1 supports pip 26.2; 7.6.x downloads every platform wheel of every pin
+#     when looking up hashes (upstream issue 2519)
+#   7.7.0 requires pip >= 26.2.2, tests against pip 26.3, fixes 2519, and is
+#     compatible with click 8.5 — this environment needs all four
+# pip and pip-tools can never be bumped independently.
+pip-tools==7.7.0
