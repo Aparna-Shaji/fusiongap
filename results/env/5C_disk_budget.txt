@@ -1,0 +1,95 @@
+packages read from lock: 82
+package                      files    chosen size  file / note
+--------------------------------------------------------------------------------------------------------------
+ast-serialize                   57      1,313,260  ast_serialize-0.13.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+build                            2         31,179  build-1.6.1-py3-none-any.whl
+certifi                          2        127,913  certifi-2026.11.20-py3-none-any.whl
+cffi                           100        221,525  cffi-2.1.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+cfgv                             2          7,445  cfgv-3.5.0-py2.py3-none-any.whl
+charset-normalizer             172         68,872  AMBIGUOUS x3 (max 255,056) e.g. charset_normalizer-3.5.2-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+click                            2        126,163  click-8.5.1-py3-none-any.whl
+cryptography                    59      4,719,841  AMBIGUOUS x6 (max 4,781,387) e.g. cryptography-50.0.2-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+cuda-bindings                   28      8,443,163  cuda_bindings-13.5.0-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl
+cuda-pathfinder                  1         63,362  cuda_pathfinder-1.9.0-py3-none-any.whl
+cuda-toolkit                     1          2,607  cuda_toolkit-13.2.2-py2.py3-none-any.whl
+distlib                          2        472,099  distlib-0.4.4-py2.py3-none-any.whl
+docutils                         2        634,701  docutils-0.23-py3-none-any.whl
+filelock                         2        218,040  filelock-4.2.10-py3-none-any.whl
+fsspec                           2        221,738  fsspec-2026.9.0-py3-none-any.whl
+id                               2         14,689  id-1.6.1-py3-none-any.whl
+identify                         2         99,506  identify-2.6.20-py2.py3-none-any.whl
+idna                             2         69,583  idna-3.20-py3-none-any.whl
+iniconfig                        2          7,552  iniconfig-2.3.1-py3-none-any.whl
+jaraco-classes                   2          6,777  jaraco.classes-3.4.0-py3-none-any.whl
+jaraco-context                   2          7,871  jaraco_context-6.1.2-py3-none-any.whl
+jaraco-functools                 2         11,677  jaraco_functools-4.6.0-py3-none-any.whl
+jeepney                          2         49,010  jeepney-0.9.0-py3-none-any.whl
+jinja2                           2        134,899  jinja2-3.1.6-py3-none-any.whl
+keyring                          2         39,160  keyring-25.7.0-py3-none-any.whl
+librt                          123        613,660  librt-0.17.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+markdown-it-py                   2         96,951  markdown_it_py-4.3.0-py3-none-any.whl
+markupsafe                     151         23,049  markupsafe-3.0.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+mdurl                            2          9,979  mdurl-0.1.2-py3-none-any.whl
+more-itertools                   2         74,405  more_itertools-11.2.1-py3-none-any.whl
+mpmath                           2        536,198  mpmath-1.3.0-py3-none-any.whl
+mypy                            52      2,801,286  AMBIGUOUS x2 (max 15,442,824) e.g. mypy-2.4.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+mypy-extensions                  2          5,114  mypy_extensions-1.2.0-py3-none-any.whl
+networkx                         2      2,142,205  networkx-3.7-py3-none-any.whl
+nh3                             52        837,369  nh3-0.3.8-cp39-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+ninja                           19        183,365  ninja-1.13.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+nodeenv                          2         39,442  nodeenv-1.12.0-py3-none-any.whl
+numpy                           66     15,718,051  numpy-2.5.5-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+nvidia-cublas                    3    404,870,805  nvidia_cublas-13.4.1.3-py3-none-manylinux_2_27_x86_64.whl
+nvidia-cuda-cccl                 4      4,113,651  nvidia_cuda_cccl-13.3.5.0.6-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+nvidia-cuda-cupti                3     11,988,600  nvidia_cuda_cupti-13.2.86-py3-none-manylinux_2_25_x86_64.whl
+nvidia-cuda-nvrtc                3     47,018,468  nvidia_cuda_nvrtc-13.2.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl
+nvidia-cuda-runtime              3      2,323,576  nvidia_cuda_runtime-13.2.86-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+nvidia-cudnn-cu13                3    519,150,073  nvidia_cudnn_cu13-9.26.0.51-py3-none-manylinux_2_27_x86_64.whl
+nvidia-cufft                     3    218,258,101  nvidia_cufft-12.2.0.57-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+nvidia-cufile                    2      1,387,670  nvidia_cufile-1.17.1.22-py3-none-manylinux_2_27_x86_64.whl
+nvidia-cusolver                  3    227,913,465  nvidia_cusolver-12.2.0.11-py3-none-manylinux_2_27_x86_64.whl
+nvidia-cusparse                  3    150,999,307  nvidia_cusparse-12.7.10.12-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+nvidia-cusparselt-cu13           3    170,148,586  nvidia_cusparselt_cu13-0.8.1-py3-none-manylinux2014_x86_64.whl
+nvidia-nccl-cu13                 2    215,965,170  nvidia_nccl_cu13-2.30.7-py3-none-manylinux_2_18_x86_64.whl
+nvidia-nvjitlink                 4     46,642,491  nvidia_nvjitlink-13.5.37-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl
+nvidia-nvshmem-cu13              2    135,397,797  nvidia_nvshmem_cu13-3.7.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+nvidia-nvtx                      3        153,463  nvidia_nvtx-13.2.86-py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl
+packaging                        2        129,956  packaging-26.3-py3-none-any.whl
+pathspec                         2         57,328  pathspec-1.1.1-py3-none-any.whl
+pip                              2      1,950,951  pip-26.3-py3-none-any.whl
+pip-tools                        2         75,279  pip_tools-7.7.0-py3-none-any.whl
+platformdirs                     2         35,402  platformdirs-4.14.5-py3-none-any.whl
+pluggy                           2         27,082  pluggy-1.7.0-py3-none-any.whl
+pre-commit                       2        226,261  pre_commit-4.7.0-py2.py3-none-any.whl
+pycparser                        2         62,600  pycparser-3.12-py3-none-any.whl
+pygments                         2      1,250,147  pygments-2.21.0-py3-none-any.whl
+pyproject-hooks                  2         10,724  pyproject_hooks-1.3.3-py3-none-any.whl
+pytest                           2        411,776  pytest-9.2.0-py3-none-any.whl
+python-discovery                 2         44,377  python_discovery-1.9.5-py3-none-any.whl
+pyyaml                          73        794,175  pyyaml-6.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+readme-renderer                  2         14,239  readme_renderer-46.0-py3-none-any.whl
+requests                         2         73,075  requests-2.34.2-py3-none-any.whl
+requests-toolbelt                2         54,481  requests_toolbelt-1.0.0-py2.py3-none-any.whl
+rfc3986                          2         31,326  rfc3986-2.0.0-py2.py3-none-any.whl
+rich                             2        310,654  rich-15.0.0-py3-none-any.whl
+ruff                            18     10,645,279  ruff-0.17.6-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+secretstorage                    2         15,554  secretstorage-3.5.0-py3-none-any.whl
+setuptools                       2        876,263  setuptools-84.2.1-py3-none-any.whl
+sympy                            2      6,299,353  sympy-1.14.0-py3-none-any.whl
+torch                           28    539,172,352  torch-2.15.0-cp314-cp314-manylinux_2_28_x86_64.whl
+triton                           8    285,674,620  triton-3.9.0-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+twine                            2         43,204  twine-7.0.0-py3-none-any.whl
+typing-extensions                2         45,571  typing_extensions-4.16.0-py3-none-any.whl
+urllib3                          2        135,717  urllib3-2.8.0-py3-none-any.whl
+virtualenv                       2      5,680,963  virtualenv-21.15.6-py3-none-any.whl
+wheel                            2         33,320  wheel-0.48.0-py3-none-any.whl
+--------------------------------------------------------------------------------------------------------------
+exact: 79   ambiguous: 3   failed: 0
+TOTAL MIN   3,050,706,958 bytes   2909.4 MiB / 3050.7 MB
+TOTAL MAX   3,063,596,226 bytes   2921.7 MiB / 3063.6 MB
+SPREAD         12,889,268 bytes   12.3 MiB / 12.9 MB
+
+problems, every one of them:
+  AMBIGUOUS     charset-normalizer: 3 candidates, 68,872..255,056 bytes
+  AMBIGUOUS     cryptography: 6 candidates, 4,719,841..4,781,387 bytes
+  AMBIGUOUS     mypy: 2 candidates, 2,801,286..15,442,824 bytes
