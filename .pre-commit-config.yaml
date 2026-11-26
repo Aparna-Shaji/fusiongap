@@ -1,4 +1,10 @@
 # Checks that run automatically before every commit (pre-commit framework).
+#
+# Install BOTH hook types after cloning:
+#   pre-commit install
+#   pre-commit install --hook-type commit-msg
+# The second is not installed by the first, and without it the commit-message
+# guard never runs.
 repos:
   - repo: local
     hooks:
@@ -7,6 +13,31 @@ repos:
         entry: gitleaks protect --staged --redact --verbose
         language: system
         pass_filenames: false
+
+      # D-42: no AI attribution anywhere in this project. These two hooks
+      # mechanise POLICY-ATTRIBUTION.md section 3, whose steps were a Task Card
+      # procedure and were omitted on commit b402e1e (finding F63).
+      #
+      # Tier 1 BLOCKs. Tier 2 prints for review and does not block, so
+      # verbose: true is required: pre-commit hides a passing hook's output,
+      # and an invisible review tier is the same as no review tier.
+      - id: attribution-guard-diff
+        name: attribution guard - staged diff (D-42)
+        entry: scripts/hooks/attribution_guard.sh diff
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true
+
+      # commit-msg stage: pre-commit appends the message file path, so the
+      # script is invoked as "attribution_guard.sh message <path>".
+      - id: attribution-guard-message
+        name: attribution guard - commit message (D-42)
+        entry: scripts/hooks/attribution_guard.sh message
+        language: system
+        stages: [commit-msg]
+        verbose: true
+
   # Every text file ends with a newline. Left to an editor setting this was
   # missed on seven files; a .gitignore without one silently fuses the next
   # pattern appended to it onto the previous line.
