@@ -80,18 +80,69 @@ Four parts.
 | CUDA toolkit | 13.2.2-1, nvcc 13.2.86, from the wsl-ubuntu repository | `nvcc --version` |
 | Host compiler | g++-15 (15.2.0-16ubuntu1) | `g++-15 --version` |
 | Python | 3.14.4 - the system interpreter **and** the project venv interpreter, which must agree | Two commands, both required: `python3 --version` and `.venv/bin/python --version`; both printed 3.14.4 on 2026-11-23. One command cannot verify this pin, because the two can disagree - on 2026-11-12 `python3 -m venv` over an existing environment kept a 3.12.16 interpreter while rewriting `pyvenv.cfg`. `python` is not a system name on this machine |
-| torch | 2.15.0+cu132 at runtime; the distribution metadata reports **2.15.0**, so the lock entry will read `torch==2.15.0`. The version string alone does not identify this wheel - the lock must carry its hash **and** the index it came from | `.venv/bin/python -c "import torch; print(torch.__version__)"` gives 2.15.0+cu132 and `.venv/bin/python -m pip show torch` gives 2.15.0; both are expected and both must hold. From 5C also `env/requirements.lock` |
+| torch | 2.15.0+cu132 at runtime; the distribution metadata reports **2.15.0**, and the lock entry reads `torch==2.15.0`. **The index question is answered, 2026-11-26.** The version string *is* a discriminator after all: for linux x86_64, plain `2.15.0` is published on PyPI and on neither PyTorch index - `/whl/cu132` publishes only `2.15.0+cu132` (21 files) and `/whl/cpu` only `2.15.0+cpu` plus plain-versioned macOS arm64 wheels (36 files), both read on 2026-11-26. PyPI publishes exactly one matching file, `torch-2.15.0-cp314-cp314-manylinux_2_28_x86_64.whl`, sha256 `1412c79b0338ea61fa31e74a59d74e412c56307e226d3c6e61ccd6d4613ffc3f`, 539,172,352 bytes. `torch==2.15.0` therefore means the CUDA 13.2 build **because that is PyPI's default build for this version**, not because of anything in the lock - and there is no `+cu132` anywhere in it, which is correct. **The lock does not record the index** (F59), so D-45 lives in `env/requirements.in`'s header and in this record. What is *not* proved is that the bytes installed in this venv are that artefact: there is no `direct_url.json` and pip records no wheel digest. The `--require-hashes` install at 5D is that test, and a mismatch there means the index, not the lock (F55) | `.venv/bin/python -c \"import torch; print(torch.__version__)\"` gives 2.15.0+cu132 and `.venv/bin/python -m pip show torch` gives 2.15.0; both expected, both must hold. Plus `grep -n -A1 '^torch==' env/requirements.lock` |
 | Triton | **3.9.0**, changeable only by a dated amendment - the same rule as Python. Separate invariant: this version must satisfy the Triton requirement declared by the installed torch wheel, measured 2026-11-23 as `triton~=3.9.0; platform_system == "Linux" and python_version < "3.16"`. Divergence is a stop and an amendment, never a silent follow | `.venv/bin/python -m pip show triton`, **and** `.venv/bin/python -c "import importlib.metadata as m; print([r for r in m.requires('torch') if 'triton' in r])"`. From 5C also `env/requirements.lock` |
-| numpy | [UNKNOWN] - **not installed**, confirmed absent 2026-11-23; installed and pinned at 5C. Required, not cosmetic: Triton's interpreter imports numpy at `@jit` decoration time, so `TRITON_INTERPRET=1` cannot import without it and no Triton kernel can be tested off the GPU (RV-36) | `.venv/bin/python -m pip show numpy` |
+| numpy | **2.5.5** - resolved and hash-pinned in `env/requirements.lock` on 2026-11-26, and **still not installed**. It installs at 5D, which is the first time this pin is exercised. Required, not cosmetic: Triton's interpreter imports numpy at `@jit` decoration time, so `TRITON_INTERPRET=1` cannot import without it and no Triton kernel can be tested off the GPU (RV-36). The absence is still observable - importing torch on 2026-11-26 emitted `UserWarning: Failed to initialize NumPy: No module named 'numpy'` | `grep -n '^numpy==' env/requirements.lock` gives the pin today; `.venv/bin/python -m pip show numpy` gives the installation, and will not answer until 5D |
 | pandas · matplotlib | [UNKNOWN] - not installed; pinned at 5C if and when the analysis stages need them | `.venv/bin/python -m pip show pandas matplotlib` |
-| pytest · ruff · mypy | [UNKNOWN] - none installed, confirmed absent 2026-11-23; pinned at 5C | `.venv/bin/python -m pip show pytest ruff mypy` |
-| pip-tools | [UNKNOWN] - not installed, confirmed absent 2026-11-23; installed and pinned at 5C, floor >= 7.5.3 | `.venv/bin/pip-compile --version` |
+| pytest · ruff · mypy | **9.2.0 · 0.17.6 · 2.4.1** - resolved and hash-pinned in `env/requirements.lock` on 2026-11-26, **none installed**. They install at 5D. Versions chosen by the resolver, not by hand: no compatibility evidence existed for any of the three on Python 3.14.4, and writing a version that has not been installed is finding F13 repeated. mypy 2.4.1 brings two compiled dependencies new to this project, `librt` and `ast-serialize` | `grep -n -E '^(pytest|ruff|mypy)==' env/requirements.lock` today; `.venv/bin/python -m pip show pytest ruff mypy` from 5D |
+| pip-tools | **7.7.0**, exactly, not a floor. 7.5.3 was pinned on 2026-11-25 to avoid an upstream defect in 7.6.x and **crashed on this machine's pip 26.3**: `TypeError: RequirementCommand.make_requirement_preparer() missing 1 required keyword-only argument: 'allow_editables'`, raised at `piptools/resolver.py` line 608 before any network access. Upstream declares 7.5.3 against pip 26.0, 7.6.0 against 26.1, 7.6.1 against 26.2; **7.7.0 requires pip >= 26.2.2, tests against 26.3, is compatible with click 8.5, and fixes the metadata-lookup defect 7.6.x carried** - this environment needs all four. pip and pip-tools can never be bumped independently (RV-40). D-26's `>= 7.5.3` floor is satisfied, so no change request was needed | **Two commands, both required, because the first cannot fail for an incompatibility.** Surface: `.venv/bin/pip-compile --version` prints `pip-compile, version 7.7.0`. Function: `printf 'filelock==4.2.10\n' > \"$HOME/.tmp/pc.in\" && .venv/bin/pip-compile --generate-hashes --allow-unsafe --rebuild -o \"$HOME/.tmp/pc.lock\" \"$HOME/.tmp/pc.in\" && grep -c -- '--hash=sha256:' \"$HOME/.tmp/pc.lock\"` must exit 0 and print `2`. The surface check alone is finding F57 |
 | ninja | 1.13.2 | `.venv/bin/python -m pip show ninja` - without it `cpp_extension.load` raises and no CUDA extension builds at all |
 | build · wheel · twine | 1.6.1 · 0.48.0 · 7.0.0 | `.venv/bin/python -m pip show build wheel twine` |
 | setuptools | 84.2.1 | `.venv/bin/python -m pip show setuptools` |
-| pre-commit | 4.7.0 | `.venv/bin/pre-commit --version` — it lives in the environment, not on the system path; the git hook still fires without activation because the generated hook holds an absolute path |
+| pre-commit | 4.7.0 - it lives in the environment, not on the system path; the git hook still fires without activation because the generated hook holds an absolute path. **From 2026-11-26 it carries D-42's attribution guard as well as gitleaks**, and that needs two installations, not one: `pre-commit install` wires the `pre-commit` stage, `pre-commit install --hook-type commit-msg` wires the message guard, **and the second is not installed by the first**. Without it the most common form of breach - a trailer appended to the message - goes unchecked (F63) | `.venv/bin/pre-commit --version`, **and** `ls .git/hooks/` must list both `pre-commit` and `commit-msg`. The version alone does not tell you whether either is wired |
 | gitleaks | 8.16.0-1build2 (apt) | `dpkg -s gitleaks \| grep '^Version:'` returns `Version: 8.16.0-1build2`, confirmed 2026-11-23. `gitleaks version` prints "version is set by build process" and no version at all |
 | `TRITON_DEFAULT_FP_FUSION` | 1, set explicitly | run metadata, from stage 08 onwards. Until the harness exists, each spike that runs a Triton kernel sets it in that spike's own environment (4I, 4J) and the setting is visible in that spike's evidence file |
+
+### What each check reads - added 2026-11-26 after F57
+
+A pin whose check reads a tool's **surface** can pass on a tool that does not work. That is not
+hypothetical. On 2026-11-25 the pip-tools row was approved as verified on the evidence of
+`pip-compile --version`, a command that prints a string and exits 0 whether or not the resolver
+runs. It did not run, and the approval commit claimed every pin had been "read back by its own
+row's command and matched". The pip-tools row above now carries a surface check and a functional
+one, labelled as such.
+
+| Row | What its check reads | Exercised in anger? |
+|---|---|---|
+| `nvidia-smi` | function | Yes - 280 samples across the D-41 A/B |
+| build · wheel · twine | surface | Yes, indirectly - the 4F two-arm upload experiment put all four through a real publish |
+| pre-commit | surface, plus a wiring check from 2026-11-26 | Yes - the hooks fire on every commit |
+| ninja | surface | Probably - the CUDA extension builds at 4E and 4G go through it, but nothing in this record states that. [VERIFY at 15] |
+| pip-tools | **both**, from 2026-11-26 | Yes - the functional check is in the row |
+| numpy · pytest · ruff · mypy | not installed | No - first exercised at 5D |
+
+**Owed:** every row gains this as a fourth column rather than a footnote. Deferred to 5B's pass over
+this record.
+
+### The lock, from 5C
+
+`env/requirements.lock` is what these pins resolve into: **82 packages, 1152 hashes**, produced on
+2026-11-26 by
+
+    pip-compile --generate-hashes --strip-extras --allow-unsafe \
+                --constraint env/measured.txt \
+                --output-file env/requirements.lock env/requirements.in
+
+`env/measured.txt` is the environment as measured that day, used as a constraint so the lock
+reproduces what was measured rather than what was newest; without it eight transitive packages
+resolved newer, one of them `cuda-pathfinder`, which sits in the CUDA library discovery path (F62).
+`--allow-unsafe` is required, not optional: without it pip and setuptools are commented out and the
+lock fails under `--require-hashes`, where one unpinned entry fails the whole install (F40, F61).
+`--strip-extras` is explicit because pip-tools makes it the default at 8.0.0 and the same input
+would otherwise produce a differently shaped lock across that boundary (F58).
+
+The resolve fetched **metadata only** - 82 `.whl.metadata` files, no package archives, both volumes
+unchanged before and after. That is D-45 working: PyPI exposes a JSON metadata API and
+`download.pytorch.org` does not, so an extra index would have forced every platform wheel of every
+pin it served to be downloaded.
+
+**5D's cost, Python side only:** download **3,063,596,226 bytes (2.85 GiB)**, computed by
+`scripts/env/budget.py` and recorded in `results/env/5C_disk_budget.txt`; installed footprint
+**5.28 GiB**, measured from the venv holding 72 of the 82; pip's cache retains every wheel it
+fetches, so the total is **8.13 GiB** unless the cache is disabled. **5D installs with
+`--no-cache-dir`** - it removes 2.85 GiB, and a rebuild warmed by the old machine's cache is not a
+fresh-distribution rebuild. The Ubuntu root filesystem, the apt packages and the CUDA toolkit are
+not in that figure and remain [UNKNOWN] here.
 
 ## Evidence
 `results/env/torch_env.txt`, `results/env/deviceQuery.txt`,
