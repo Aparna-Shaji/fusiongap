@@ -1,6 +1,6 @@
 # ADR-0001 — Environment pins, dependency lock mechanism and host compiler
 
-Status: proposed
+Status: accepted 2026-11-28 (stage 5B review)
 Date: 2026-11-19
 Owner stage: 03 → frozen at 05
 
@@ -41,24 +41,33 @@ Four parts.
    `python3 --version` must print 3.14.4. If it does not, 5D **stops**: the rebuild is then
    not a reproduction, the difference is recorded as a dated amendment, and no measurement is
    taken under the new interpreter until it is.
-2. **Dependency pinning.** `pip-tools >= 7.5.3`. `pip-compile --generate-hashes` produces
-   `env/requirements.lock`; installation is always
-   `pip install --require-hashes -r env/requirements.lock`. The 7.5.3 floor is not cosmetic
-   and it is load-bearing: the stage-03 rubric did not decide this on its own - `../TECH-STACK.md`
-   section 1 carries the scores and says so - so this option won on a tie-break, and the floor
-   is what makes it credible. Three claims support
-   the floor. None has been confirmed against this machine, and each carries its check:
-   (a) that release declares Python 3.14 support
-   [VERIFY at 5C: read the pip-tools changelog entry for 7.5.3 and its declared
-   Requires-Python];
-   (b) it is compatible with pip 26 - the installed pip is 26.3, measured 2026-11-23
-   [VERIFY at 5C: `pip-compile --version` runs and resolves under that pip];
-   (c) it fixes a defect where `pip-compile` dropped index-URL options while looking up
-   hashes, which broke resolution for packages available only from an extra index — which is
-   exactly how torch is published
-   [VERIFY at 5C: the generated lock carries the index URL for the torch entry].
-   If any of the three is wrong the floor is wrong, and after gate 05 that costs a dated
-   amendment and a re-resolve inside stage 05's two-hour box.
+2. **Dependency pinning.** `pip-tools`, pinned at **7.7.0 exactly, not a floor**.
+   `pip-compile --generate-hashes` produces `env/requirements.lock`; installation is always
+   `pip install --require-hashes -r env/requirements.lock`. The stage-03 rubric did not decide
+   this on its own - `../TECH-STACK.md` section 1 carries the scores and says so - so this
+   option won on a tie-break, and what made it credible was an open floor plus three claims.
+   **All three have since been answered, and this part is restated rather than left as its
+   2026-11-19 snapshot, because the pin table below was rewritten on 2026-11-26 and the two
+   halves of this record then disagreed about the pin, its form and its justification (F98).**
+   What the floor was, and what became of it:
+   (a) *that 7.5.3 declares Python 3.14 support* - **moot**: 7.5.3 is not the pin. What 7.7.0
+   declares is in the pip-tools row below.
+   (b) *that it is compatible with pip 26* - **answered NO for 7.5.3.** It crashed on this
+   machine's pip 26.3 before any network access; the traceback is in the pip-tools row. The
+   surface check that had marked this verified cannot fail for an incompatibility - that is
+   finding F57, and it is why the row now carries a functional check beside the surface one.
+   (c) *that it fixes a defect affecting packages available only from an extra index, "which is
+   exactly how torch is published"* - **the premise is false for this project.** D-45, measured
+   2026-11-26: for linux x86_64 `torch==2.15.0` is published on PyPI and on neither PyTorch
+   index, and PyPI is this project's sole index. There is no extra index here, so that defect
+   could never have applied. Its check - that the generated lock carries the index URL for the
+   torch entry - was answered **no** and ruled acceptable: the lock records no index (F59), and
+   the index is documented in `env/requirements.in`'s header and in the torch row below.
+   **Why the open floor was nonetheless the right form.** It is what allowed 7.7.0 to be
+   adopted on evidence, without a change request, when 7.5.3 proved unusable on this machine.
+   An exact pin written on 2026-11-19 would have forced an amendment on 2026-11-26 to repair a
+   defect the pin itself introduced. The floor is closed now because the resolve has run and
+   the lock exists; from here pip-tools moves only with pip, to which it is coupled (RV-40).
 3. **Host compiler.** `g++-15` is named explicitly wherever a host compiler is selected,
    never the unversioned `gcc` alias. nvcc 13.2 errors above GCC major 15 and this
    distribution's default is 15.2.0, so there is no headroom and an ordinary system

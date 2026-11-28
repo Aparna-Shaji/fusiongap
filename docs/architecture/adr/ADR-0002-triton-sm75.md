@@ -1,6 +1,6 @@
 # ADR-0002 — Triton and Inductor on compute capability 7.5
 
-Status: proposed
+Status: accepted 2026-11-28 (stage 5B review)
 Date: 2026-11-23
 Owner stage: 04 → frozen at 05
 
@@ -52,6 +52,16 @@ M = 128, N = 128, K = 64, tiles 64 x 64 x 32.
 
 For fp32 the two are identical by construction, because nothing is cast.
 
+**None of the four bars carries a derivation, and that is now recorded rather than left
+implicit.** The cited evidence `results/env/4J_tl_dot.txt` is seventeen lines and prints both
+bars as bare numbers. The fp16 full-pipeline bar of `2.0e-02` admits a measured error of
+`2.427e-04`, roughly 82x inside it, so it cannot fail on anything short of a gross defect -
+which is the same objection the paragraph below raises about the bar it replaced.
+`[VERIFY: how - derive all four bars at stage 17, from the unit in the last place of each dtype
+and the reduction depth K = 64, before K1's and K3's tolerances inherit them under the two-bar
+rule in Consequences.]` Until then these are working bars, not derived ones, and no tolerance
+claim in this project rests on them.
+
 **Two bars, because the first version of the first bar could not fail.** 4J's original fp16
 check had five orders of magnitude of slack: the reference was built from the already-rounded
 inputs, so input rounding cancelled from both sides and the comparison measured almost
@@ -95,19 +105,49 @@ project's pins. A second machine, which is why R1 is retired rather than merely 
 - **Must do:** `tests/test_environment.py` at stage 16 asserts the pinned version, that the
   installed torch still declares a 3.9 requirement, and that `TRITON_DEFAULT_FP_FUSION=1` is
   set. TECH-STACK cell 3 is brought into line with ADR-0001's Triton row in the same commit
-  as this record — finding F1's fix required both and only one was applied on 2026-11-23.
+  as this record — finding C4-F1's fix required both and only one was applied on 2026-11-23.
 
 ## Fallback
 If a future torch moves its declared Triton requirement, the pair changes only by dated
 amendment, and 4B and 4J are re-run on the new pair before any measurement is taken under it.
-If no pair runs on this GPU at all, the charter's exception applies: the Triton arm is dropped
-through this record, by amendment, with the failure reproduced and committed — and the
-re-charter at stage 01 must address losing B2 at the same time, because the same failure takes
-both.
+If the pinned pair stops running on this GPU, the charter's exception becomes available - but
+only through a finite test. "If no pair runs on this GPU at all" quantifies over every
+torch/Triton release that exists or will exist, and no experiment establishes it, so as
+originally written the charter's one escape hatch for a never-cut item was gated on an
+unopenable door (F71). The decidable form: the pinned pair fails spikes 4B and 4J on this GPU,
+**and** the two adjacent torch releases either side of the pin, each re-resolved with its own
+declared Triton, fail the same two spikes. Five pairs, a bounded afternoon, a reproducible
+negative. If that test comes back all-fail the Triton arm is dropped through this record, by
+amendment, with every failure reproduced and committed - and the re-charter at stage 01 must
+address losing B2 at the same time, because the same failure takes both. The branch is dormant:
+a pair runs (Decision part 1), and R1 is retired on two machines.
 
 ## Reversal trigger
-Looked for at 5C, at 5D, and in every run's metadata thereafter.
-1. `.venv/bin/python -m pip show triton` reports anything other than 3.9.0.
-2. The installed torch's declared Triton requirement no longer names 3.9.
-3. `TRITON_DEFAULT_FP_FUSION` is unset, or set to anything but 1, in a recorded run.
-4. A Triton kernel passes under `TRITON_INTERPRET=1` and fails on the GPU, or the reverse.
+Looked for at 5C, at 5D, and in every run's metadata thereafter. **Triggers 1 and 2 are
+pre-run guards on the current environment; triggers 3 to 5 are read from a run's own recorded
+metadata.** That distinction is load-bearing and was missing until 2026-11-28 (F70). A check
+that reads the *current* environment cannot speak about a run taken weeks earlier: a historical
+run compiled by a different Triton stays silent, and a later environment change fires against
+runs that were valid when they were taken. Both directions fail, and they fail in opposite
+ways.
+
+1. **Pre-run guard, read before each measurement session.** `.venv/bin/python -m pip show
+   triton` reports anything other than 3.9.0.
+2. **Pre-run guard, read before each measurement session.** The installed torch's declared
+   Triton requirement no longer names 3.9.
+3. **From run metadata.** A run's own recorded Triton version is anything other than 3.9.0, or
+   its recorded torch version is not the pinned pair's. This is the trigger that makes the
+   Consequences claim above - that both arms share a compiler, so a difference between them is
+   this project's finding rather than a version artefact - checkable after the fact. Without
+   the version in run metadata that claim is unfalsifiable, which is how it stood until
+   2026-11-28.
+4. **From run metadata, for runs taken on or after 2026-11-23.** `TRITON_DEFAULT_FP_FUSION` is
+   unset, or set to anything but 1. The scope matters twice (F29). Earlier runs - 4B and 4C
+   among them - predate the pin, so an unset variable there is not evidence of drift. And in
+   Triton 3.9.0 unset reads as ENABLED, arithmetically identical to 1, so an unset variable in
+   a 3.9.0 run is a **recording** defect and not an arithmetic one. It becomes an arithmetic
+   one at 3.10, which is the version bump this trigger exists to catch.
+5. **From 5D onward, not before.** A Triton kernel passes under `TRITON_INTERPRET=1` and fails
+   on the GPU, or the reverse. This cannot be looked for at 5C (F73): `TRITON_INTERPRET=1`
+   imports numpy at `@jit` decoration time, and this record states twice that numpy is not
+   installed. It installs at 5D (RV-36).

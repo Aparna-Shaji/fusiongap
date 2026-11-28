@@ -1,6 +1,6 @@
 # ADR-0005 — CI scope: what a GPU-less runner checks, and what it cannot
 
-Status: proposed
+Status: accepted 2026-11-28 (stage 5B review)
 Date: 2026-11-23
 Owner stage: 04 → frozen at 05
 

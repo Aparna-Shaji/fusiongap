@@ -1,6 +1,6 @@
 # ADR-0003 — Telemetry source and sampling method
 
-Status: proposed
+Status: accepted 2026-11-28 (stage 5B review)
 Date: 2026-11-23
 Owner stage: 04 → frozen at 05
 
@@ -28,9 +28,14 @@ Six parts.
    rate is a measured property and is recorded per capture, never assumed from the flag.
 4. **Fields, ten per sample:** `timestamp`, `clocks.sm`, `clocks.mem`, `power.draw`,
    `enforced.power.limit`, `temperature.gpu`, `utilization.gpu`, `utilization.memory`,
-   `memory.used`, `clocks_event_reasons.active`. Five of them — SM clock, memory clock,
-   temperature, power draw and the event-reason flags — must never read `N/A` in a capture
-   that is used.
+   `memory.used`, `clocks_event_reasons.active`. **Six of them — SM clock, memory clock,
+   temperature, power draw, the event-reason flags and `enforced.power.limit` — must never
+   read `N/A` in a capture that is used.** The sixth was added on 2026-11-28 (F87). It is the
+   field D-39 pins, the field reversal trigger 4 reads, and the field the invalidity rule in
+   Consequences rests on - load-bearing in three places and protected in none. The failure is
+   silent in the direction that matters: a load window reading `N/A` throughout yields a
+   distinct set of exactly one member, so trigger 4 does not fire and the run reads as valid
+   with no ceiling recorded at all.
 5. **Windows are cut from the load generator's own printed timestamps**, never inferred from
    the telemetry itself. This is not a style preference; see Evidence.
 6. **Observations are printed and never become pass criteria.** Cool-down behaviour and the
@@ -73,8 +78,18 @@ exit 0 and print "All done" while setting nothing, and `-rgc` fails with "Unknow
 there is no reset path either. Clock state is therefore a measured covariate, not a
 controlled variable.
 
-**The enforced ceiling, measured across a load transition on 2026-11-23**
-(`results/env/4K_power_under_load.txt`): 40 samples across idle, 25 s of sustained
+**The enforced ceiling, measured twice. The primary evidence is 4L** -
+`results/env/4L_balance.csv`, `4L_balance.txt`, `4L_high-performance.csv` and
+`4L_high-performance.txt` (2026-11-24), produced by the committed instrument
+`spikes/4L/sample_power.py`: 140 samples per arm, 280 in total, the ceiling reading 30.00 W on
+every single sample, with zero disagreements between the two power-limit forms. That run is
+reproducible from this repository. The reading below is not, and the distinction was missing
+from this record until 2026-11-28 (F85).
+
+**The earlier reading, 2026-11-23** (`results/env/4K_power_under_load.txt` - **produced by an
+uncommitted command and therefore NOT regenerable, finding F32; retained because it is the only
+record of the idle movement described two paragraphs below**): 40 samples across idle, 25 s of
+sustained
 100 % utilisation, and idle again. The ceiling read **30.00 W on every sample**, idle and
 loaded alike. Power draw under load was 28.1–29.1 W, which is 94–97 % of the cap, with the SM
 clock oscillating between 945 and 1050 MHz against a 1515 MHz device maximum — the signature
@@ -107,9 +122,17 @@ be held from inside WSL. Under load it did not move. The rule that follows is in
 - **Harder:** the enforced power ceiling is read, not set. It held under load on the only
   occasion it has been measured under load, and it moved at idle on the same day.
 - **Must do, all at stage 08 unless stated:**
-  - The harness records the set of distinct `enforced.power.limit` values seen in each run.
-    The grader already prints that set; from stage 08 a run whose set has more than one member
-    is **invalid, not adjusted**.
+  - The harness records the set of distinct `enforced.power.limit` values seen **in a run's
+    load window**, never across the whole capture. The scope is load-bearing, and leaving it
+    out was finding F86. This record documents above that the ceiling moves between 50 W and
+    30 W at idle and does not move under load; every capture contains idle windows, because
+    they are the negative control that proves the load ran. A whole-capture set would therefore
+    mark a capture invalid for a documented, harmless idle wobble - firing on the control
+    instead of on the measurement. A **load-window** set with more than one member is
+    **invalid, not adjusted**. **Enforced from 5C by `scripts/env/capture.py`**, which computes
+    that set over the load window only; stage 08's harness inherits it rather than inventing
+    it. `spikes/4C/grade_4c.py` prints its set over the whole capture - that is an observation
+    and must not be read as this criterion.
   - A run's ceiling is comparable only to a roofline denominator measured under the same
     ceiling. Stage 07 records the ceiling with the ceilings it measures.
   - Oracle O7 at 8D checks that sampling does not disturb the timed region (RV-06).
@@ -117,14 +140,14 @@ be held from inside WSL. Under load it did not move. The rule that follows is in
     interval. The grader's cool-down block already measures this; it becomes a check.
 
 ## Fallback
-If any of the five required fields begins reading `N/A` under load, fall back to a spin-kernel
+If any of the six required fields begins reading `N/A` under load, fall back to a spin-kernel
 clock probe around each group (oracle O2, stage 8D), and disclose temperature as unavailable
 rather than estimating it. Record the change as a dated amendment. The fallback deliberately
 loses a field instead of inventing one.
 
 ## Reversal trigger
 Looked for in every committed capture, and at 8D.
-1. Any of the five required fields reads `N/A` in a capture that is used.
+1. Any of the six required fields reads `N/A` in a capture that is used.
 2. The measured rate falls below 2 Hz, or the maximum inter-sample gap exceeds 0.75 s.
 3. Oracle O7 shows the sampler perturbs the timed region beyond its stated tolerance.
 4. A run's `enforced.power.limit` set has more than one member.

@@ -1,6 +1,6 @@
 # ADR-0004 — Distribution model: the published artefact is pure Python
 
-Status: proposed
+Status: accepted 2026-11-28 (stage 5B review)
 Date: 2026-11-23
 Owner stage: 04 → frozen at 05
 
@@ -83,10 +83,14 @@ Consequences.
   torch or CUDA moves. The artefact is small; the spike's was 1780 bytes.
 - **Harder, and this is the decision's real cost:** nothing ships pre-built, so the entire
   install contract moves into declared dependencies, where a mistake is silent until import.
-  The spike demonstrates the failure. Finding F15 makes it harder than it looks: this
-  project's torch reports distribution metadata version `2.15.0`, which on a public index does
-  not by itself name the CUDA build in use here, so a declared dependency on torch must reckon
-  with which index resolves it.
+  The spike demonstrates the failure. The index question that once made this harder was
+  measured and settled on 2026-11-26, and the premise recorded here until 2026-11-28 was false
+  for this project (F91): for linux x86_64, `torch==2.15.0` is published on PyPI and on
+  **neither** PyTorch index, so the version string does discriminate, and D-45 pins PyPI as
+  this project's sole index. There is no "which index resolves it" left to reckon with.
+  Evidence: `env/requirements.in`'s header and ADR-0001's torch row. What remains hard is the
+  half no index pin fixes - nothing ships pre-built, so a missing or wrong declared dependency
+  is silent until import, exactly as arm 2 demonstrated.
 - **Harder:** the Triton compile moves to the user's first call. It is far cheaper than nvcc,
   but it is not free and it requires a GPU present at first use.
 - **Must do:** stage 15's packaging configuration declares every runtime dependency and names
@@ -107,4 +111,11 @@ Looked for at 4F whenever the packaging is rebuilt, and again at 27C.
 2. The built wheel contains any path ending `.so`, or any path outside `fusiongap/` and
    `fusiongap-<version>.dist-info/` — the same check as ADR-0006's reversal trigger.
 3. A clean-environment `pip install fusiongap` followed by `import fusiongap` raises
-   `ModuleNotFoundError` — the failure arm 2 reproduced on 2026-11-23.
+   `ModuleNotFoundError`, where `fusiongap` is **the published wheel built by stage 15's
+   packaging configuration with its declared dependencies installed**. Looked for from stage 15
+   onward, and again at 27C and 31. The qualifier is the whole trigger (F75): arm 2 above was
+   `fusiongap_spiked`, a 1780-byte spike declaring no dependencies at all, and it failed in
+   exactly this way on 2026-11-23 - so without the qualifier this clause reads as already
+   satisfied by a throwaway, and will be false of the real package. It was true of the artefact
+   that demonstrated the risk and silent about the artefact it governs. The spike's failure
+   stays in Evidence and Consequences, where it is the reason stage 15's "must do" exists.

@@ -1,6 +1,6 @@
 # ADR-0006 — One repository for the library and the study
 
-Status: proposed
+Status: accepted 2026-11-28 (stage 5B review)
 Date: 2026-11-19
 Owner stage: 03 → frozen at 05
 
@@ -44,12 +44,29 @@ references and a reader outside the project cannot follow them.
   private travelled with the artefact.
 
 ## Fallback
-If packaging from a mixed repository proves impossible at 4F, publish from a generated
-subtree rather than splitting the history — history is what makes the dated
-pre-registration worth anything, and it cannot be split without losing that.
+**Condition, re-scoped on 2026-11-28 (F51).** This was written against 4F, which ran on
+2026-11-22 and is closed. A fallback whose condition can only be evaluated at a closed stage
+can never be taken. It is read from **stage 15 onward at every wheel build, and again at 27C
+and 31** - the stages that write the packaging configuration and build the published artefact.
+The condition: a wheel built by stage 15's configuration contains any path outside the
+allowlist in this record's reversal trigger, and no change to that configuration removes it.
+
+**First action, not only an outcome (F50).** This previously named a destination and no step,
+so under time pressure there was nothing to do first. The order is:
+1. Record the offending paths from `unzip -l` on the built wheel, so the fallback is taken
+   against evidence rather than against a suspicion.
+2. Generate a publish-only subtree containing `src/fusiongap/` alone, via `git subtree split`
+   into a throwaway branch that is never pushed.
+3. Build the wheel from that subtree and check it against the same allowlist.
+4. Record a dated amendment naming the paths from step 1 and the subtree commit.
+
+**The history is never split.** History is what makes the dated pre-registration worth
+anything, and it cannot be split without losing that - which is why the subtree is generated
+per release and discarded, never maintained as a second line of development.
 
 ## Reversal trigger
-Looked for at 4F, and written as an **allowlist** rather than as a list of directories to
+Looked for at 4F (done, 2026-11-22), from stage 15 onward at every wheel build, and again at
+27C and 31. Written as an **allowlist** rather than as a list of directories to
 exclude: a denylist fails open, because it misses anything not yet invented - a future
 `notebooks/`, `env/` or `scripts/` would ship in silence. The trigger fires when `unzip -l` on
 the built wheel lists any path outside `fusiongap/`, `fusiongap.libs/` and
