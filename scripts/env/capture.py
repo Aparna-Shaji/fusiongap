@@ -413,6 +413,59 @@ def live_cell(period):
     return rows
 
 
+def preflight(args):
+    """RV-39's controls, INVOKED rather than merely available (F103).
+
+    Until 2026-11-28 `run` sampled without calling any of these, so a measurement
+    taken on a hot, still-boosted GPU was written out as VERDICT VALID - the exact
+    confound this artefact exists to remove. Returns (ok, lines).
+    """
+    rep = Replay(args.preflight_replay) if args.preflight_replay else None
+    if rep is None and args.replay:
+        return True, ["PREFLIGHT SKIPPED - replay with no --preflight-replay"]
+
+    # 1. the floor, measured this session: the targets are relative to it, because
+    #    an absolute target is unsatisfiable on a warm day (measured 2026-11-28).
+    rows = collect_floor(rep, args.period, FLOOR_WINDOW_S)
+    if len(rows) < 6:
+        return False, ["PREFLIGHT REFUSE - floor window has %d samples, need >= 6"
+                       % len(rows)]
+    temps = [f(r, "temp_c") for r in rows]
+    clocks = [f(r, "sm_mhz") for r in rows]
+    utils = [f(r, "util_pct") for r in rows]
+    if max(utils) > 0.5:
+        return False, ["PREFLIGHT REFUSE - floor taken under load, utilisation %.0f%%"
+                       % max(utils)]
+    k = len(rows) // 3
+    drift = abs(median(temps[:k]) - median(temps[-k:]))
+    if drift > EQ_TOL_C:
+        return False, ["PREFLIGHT REFUSE - floor still cooling, thirds differ %.2f C "
+                       "(> %.2f): that is a snapshot, not an equilibrium" % (drift, EQ_TOL_C)]
+    ft, fc = median(temps), median(clocks)
+
+    # 2. cool down on BOTH dimensions. The timeout is a FAILURE: a cool-down that
+    #    gives up and proceeds produces the confound it exists to remove while
+    #    looking like a controlled run.
+    waited = 0.0
+    while True:
+        row = rep.take() if rep is not None else live_sample("idle")
+        if row is None:
+            return False, ["PREFLIGHT REFUSE - cool-down samples exhausted after %.1f s"
+                           % waited]
+        bad, temp, clock, tt, ct = check_precondition(row, ft, fc)
+        if not bad:
+            return True, ["PREFLIGHT OK floor_temp=%.2f floor_clock=%.0f "
+                          "start_temp=%.2f start_clock=%.0f t_target=%.2f "
+                          "c_target=%.0f waited_s=%.1f"
+                          % (ft, fc, temp, clock, tt, ct, waited)]
+        if waited >= COOLDOWN_TIMEOUT_S:
+            msg = ["PREFLIGHT REFUSE - cool-down timed out after %.1f s" % waited]
+            return False, msg + ["  still: " + b for b in bad]
+        if rep is None:
+            time.sleep(args.period)
+        waited += args.period
+
+
 def cmd_run(args):
     replaying = bool(args.replay)
     if replaying and not args.out:
@@ -420,6 +473,17 @@ def cmd_run(args):
         # results/env by default.
         die("run --replay requires an explicit --out DIR: a replayed run is not "
             "a measurement and must not default into results/env")
+
+    # RV-39's controls run BEFORE any sampling, and a refusal writes NOTHING.
+    # Taking a measurement on a hot or still-boosted card and labelling it valid
+    # is worse than not taking it at all (F103).
+    pf_ok, pf_lines = preflight(args)
+    if not pf_ok:
+        for ln in pf_lines:
+            print(ln)
+        print("VERDICT REFUSED - no measurement taken, nothing written")
+        return 1
+
     outdir = Path(args.out) if args.out else (REPO / "results" / "env")
     outdir.mkdir(parents=True, exist_ok=True)
 
@@ -447,6 +511,8 @@ def cmd_run(args):
     else:
         lines.append("SOURCE LIVE nvidia-smi, one query per sample (D-31)")
     lines.append("label: %s" % args.label)
+    for ln in pf_lines:
+        lines.append(ln)
     lines.append("clock: WSL, UTC. Every stamp above carries an explicit Z "
                  "(ENVIRONMENT.md section 2)")
     lines.append("protocol: %.0fs idle -> %.0fs load -> %.0fs idle, period %.1fs"
@@ -508,6 +574,7 @@ def main():
     sp = sub.add_parser("run")
     sp.add_argument("--label", required=True)
     sp.add_argument("--replay")
+    sp.add_argument("--preflight-replay")
     sp.add_argument("--out")
     sp.add_argument("--period", type=float, default=PERIOD_S)
 

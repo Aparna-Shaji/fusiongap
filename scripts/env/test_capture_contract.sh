@@ -163,6 +163,29 @@ printf '%s\nidle,48.00,300,3.30,0,30.00,30.00\n' "$HDR" > "$FIX/pre_hot.csv"
   for _ in $(seq 1 3);  do printf 'idle,44.00,300,3.30,0,30.00,30.00\n'; done
 } > "$FIX/run_valid.csv"
 
+# 11. a preflight that passes: 24 idle floor rows, then one cool, idle-clock row
+{
+  printf '%s\n' "$HDR"
+  for t in 42.30 42.30 42.40 42.40 42.40 42.30 42.40 42.40 42.30 42.40 \
+           42.30 42.50 42.40 42.40 42.50 42.40 42.40 42.40 42.40 42.50 \
+           42.60 42.40 42.30 42.40; do
+    printf 'idle,%s,300,3.30,0,30.00,30.00\n' "$t"
+  done
+  printf 'idle,42.50,300,3.30,0,30.00,30.00\n'
+} > "$FIX/pre_ok.csv"
+
+# 12. the same floor, then a card that never cools: the GPU has just finished an
+#     arm. This is the state F103 let through.
+{
+  printf '%s\n' "$HDR"
+  for t in 42.30 42.30 42.40 42.40 42.40 42.30 42.40 42.40 42.30 42.40 \
+           42.30 42.50 42.40 42.40 42.50 42.40 42.40 42.40 42.40 42.50 \
+           42.60 42.40 42.30 42.40; do
+    printf 'idle,%s,300,3.30,0,30.00,30.00\n' "$t"
+  done
+  for _ in $(seq 1 8); do printf 'idle,51.00,1005,12.00,0,30.00,30.00\n'; done
+} > "$FIX/pre_hotstart.csv"
+
 # ---------------------------------------------------------------------------
 # case 0 - both artefacts exist. Everything else is unreadable without them.
 # ---------------------------------------------------------------------------
@@ -347,6 +370,39 @@ else
   no "case 15 - a fully valid run PASSES end to end and says so on line 1 (P-31)" \
      "exit 0 and 'VERDICT VALID' on line 1" \
      "$([ -f "$OUTD/capture_t2.txt" ] && head -1 "$OUTD/capture_t2.txt" || echo 'file not written')"
+fi
+
+# ---------------------------------------------------------------------------
+# cases 16-17 - THE ASSEMBLY (F103). Cases 3-9 prove the floor, the cool-down
+# and the precondition as standalone subcommands. Until 2026-11-28 nothing
+# asserted that `run` CALLS them, and it did not: a hot, still-boosted card was
+# sampled and written out as VERDICT VALID. Every component passed; the
+# assembly was never tested.
+# ---------------------------------------------------------------------------
+rm -f "$OUTD"/capture_t3.* "$OUTD"/capture_t4.*
+RO="$(bash "$SH" run --label t3 --replay "$FIX/run_valid.csv" \
+        --preflight-replay "$FIX/pre_hotstart.csv" --out "$OUTD" 2>&1)"; rc=$?
+if [ "$rc" -ne 0 ] \
+   && printf '%s\n' "$RO" | grep -q 'PREFLIGHT REFUSE' \
+   && [ ! -f "$OUTD/capture_t3.csv" ] && [ ! -f "$OUTD/capture_t3.txt" ]; then
+  ok "case 16 - run REFUSES a hot, still-boosted start and writes nothing (F103)"
+else
+  no "case 16 - run REFUSES a hot, still-boosted start and writes nothing (F103)" \
+     "non-zero exit, PREFLIGHT REFUSE, and no files written" \
+     "rc=$rc files=$(ls "$OUTD" | tr '\n' ' ') out=$(printf '%s' "$RO" | tr '\n' ' ')"
+fi
+
+RO="$(bash "$SH" run --label t4 --replay "$FIX/run_valid.csv" \
+        --preflight-replay "$FIX/pre_ok.csv" --out "$OUTD" 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ] \
+   && [ -f "$OUTD/capture_t4.txt" ] \
+   && head -1 "$OUTD/capture_t4.txt" | grep -q 'VERDICT VALID' \
+   && grep -q 'PREFLIGHT OK' "$OUTD/capture_t4.txt"; then
+  ok "case 17 - run PROCEEDS from a cool start and records the preflight (P-31)"
+else
+  no "case 17 - run PROCEEDS from a cool start and records the preflight (P-31)" \
+     "exit 0, VERDICT VALID on line 1, PREFLIGHT OK in the summary" \
+     "rc=$rc out=$(printf '%s' "$RO" | tr '\n' ' ')"
 fi
 
 summary
