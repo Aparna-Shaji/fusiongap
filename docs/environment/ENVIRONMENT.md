@@ -141,12 +141,27 @@ to Windows or to apt, not to the distribution image.
 
 1. Install a fresh Ubuntu 26.04.1 LTS WSL2 distribution. Record free space on `C:` before and
    after; RV-30's trigger is two consecutive session-start readings below 45 GB.
-   **Compute the budget before the import, not after:** the rootfs, the CUDA toolkit's
-   apt download and installed size, and the torch wheel. Free space read 59 GB on
-   2026-11-25, so a rebuild costing more than about 14 GB arms RV-30 by this project's
-   own action. If the budget does not clear the 30 GB floor, free space first -
-   `rm -rf ~/.cache/pip` recovers about 3.4 GB - or place the second distribution's
-   virtual disk on another volume (F45).
+   **The budget is MEASURED, 2026-11-27, and is no longer computed at this step** (F45).
+   Four components, bottom-up, agreeing with the top-down figure: Ubuntu rootfs and base
+   apt **6.93 GiB** (by subtraction) - CUDA toolkit **4.8 GiB** (`du /usr/local/cuda-13.2`)
+   - Nsight Compute and Systems **2.4 GiB** (`du /opt/nvidia`: they install OUTSIDE the
+   toolkit directory, so the two footprints add rather than overlap) - Python environment
+   **5.4 GiB** (`du .venv`) - pip cache excluded, because step 5 installs with
+   `--no-cache-dir`. **Total 19.53 GiB.**
+   Free space on `C:` read **69.04 GiB (74,134,622,208 bytes) on 2026-11-28**, so the
+   rebuild leaves about **49.5 GiB - above** RV-30's 45 GB trigger. That reverses the
+   conclusion of 2026-11-27, when 61.15 GiB would have left about 41.6 GiB and armed it:
+   **7.89 GiB appeared overnight with no recorded cause** (F56), so the margin is real but
+   not yet explained, and a future reading may undo it.
+   **Read exact bytes, never `-h`.** `df --block-size=1 /mnt/c` - the human-readable form
+   rounds in ways that hid gigabyte-scale movement earlier in the week.
+   The transient peak during installation is higher than the installed figure, because apt
+   stages every `.deb` before installing it; the `apt-get clean` steps below remove that
+   peak (F78). If a future reading does not clear the 30 GB floor, place the second
+   distribution's virtual disk on another volume. **`rm -rf ~/.cache/pip` may recover
+   nothing on `C:`**: a WSL2 virtual disk grows on write and does not shrink when files
+   inside it are deleted, unless it is sparse or explicitly compacted. Whether this one is
+   sparse is `[UNKNOWN]`; step 11 tests it (F77).
 2. **Before installing anything else, read every row of section 1 and compare.** Record each
    result, pass or fail. A mismatch is recorded, never silently accepted (AM-08).
 3. Install the distribution prerequisites named in ADR-0001 — `python3`, `python3-venv`, the build
@@ -159,16 +174,44 @@ to Windows or to apt, not to the distribution image.
    build file written at stage 15 therefore names `-ccbin /usr/bin/g++-15` explicitly
    and sets `CXX`; reversal trigger 4 of ADR-0001 is what catches a build that did
    neither (F42).
+   **Then two checks this procedure lacked until 2026-11-28.** First
+   `test -x "$CUDA_HOME/bin/nvcc"`. Step 6 pins `CUDA_HOME` to `/usr/local/cuda-13.2`, and
+   `scripts/env/test_setup_contract.sh` checks only that the variable is *set* - it never
+   looks for a toolkit at that path, which is V27's stated exclusion. If apt lands the
+   toolkit at a different patch path the variable still passes every assertion and the CUDA
+   arm fails at step 8 with nothing upstream to blame. Second `sudo apt-get clean`: apt
+   stages every `.deb` in `/var/cache/apt/archives` before installing, so without this the
+   transient disk peak exceeds step 1's installed figure by several gigabytes (F78).
 4. Create the virtual environment on the pinned interpreter. Check it with **`python3 --version`**,
    never with the apt package version: `apt-cache policy python3` reports 3.14.3 while the
    interpreter reports 3.14.4, because `python3` is a metapackage and the binary belongs to
    `python3.14-minimal` (F19). A pin checked against the package can never detect an interpreter
    change.
-5. Install from the hash-pinned lock: `pip install --require-hashes -r env/requirements.lock`.
-   **[NOT YET — `env/requirements.lock` is produced at stage 5C.]**
-6. Apply the shell environment of section 2. **[`env/setup.sh` is produced at stage 5C.]**
-7. Install the five Nsight packages of row 3. They sit outside the lock by nature; a rebuild that
-   stops after step 5 has no profiler at all.
+5. Install from the hash-pinned lock, **with `--no-cache-dir`**:
+   `pip install --no-cache-dir --require-hashes -r env/requirements.lock`.
+   The lock exists as of 2026-11-26: **82 packages, 1152 hashes**, resolved from PyPI alone
+   (D-45) against `env/measured.txt` as a constraint so it reproduces what was measured
+   rather than what was newest (F62). `--no-cache-dir` is not tidiness - a rebuild warmed
+   by the old machine's pip cache is not a fresh-distribution rebuild, and it keeps
+   2.85 GiB out of the footprint. Hash-checking is all-or-nothing across every requirement
+   and every transitive dependency (F40), so one failure fails the whole install, and that
+   is the intended behaviour rather than a problem to work around.
+6. Apply the shell environment of section 2 by **sourcing** it, never executing it:
+   `. scripts/env/setup.sh`.
+   **The path is `scripts/env/`, not `env/`.** `env/` holds declarations and `scripts/env/`
+   holds executables, ruled 2026-11-26 (F60) - a ruling recorded in project memory and never
+   propagated into this file, so this step named a path that will never exist until
+   2026-11-28 (F76). The script refuses to be executed rather than sourced, because an
+   executed copy exits 0 having changed nothing, which is this project's most-repeated
+   failure mode (D-46). Four of section 2's seven pinned items are **absences**, so a script
+   that exports `TMPDIR` and `CUDA_HOME` and stops has done two sevenths of the job and
+   looks finished; `scripts/env/test_setup_contract.sh` is the ten-assertion check that
+   plants all four absences before sourcing.
+7. Install the five Nsight packages of row 3, then `sudo apt-get clean` a second time (F78).
+   They sit outside the lock by nature; a rebuild that stops after step 5 has no profiler at
+   all. They install to **`/opt/nvidia`, outside `/usr/local/cuda-13.2`**, which is why step
+   1's budget adds their 2.4 GiB rather than counting it inside the toolkit - a
+   toolkit-directory measurement misses them entirely.
 8. Run the committed spikes as smoke tests, in this order, and keep every output:
    `spikes/4G/test_triton_interpret.py` (no GPU needed) → `spikes/4I/` (fp64 `gradcheck`, which
    carries a planted-wrong control that must be rejected) → `spikes/4J/` (`tl.dot` against two
@@ -176,8 +219,23 @@ to Windows or to apt, not to the distribution image.
    *There are no g++ version bounds defined for CUDA version 13.2* - expected, not a
    defect; section 5 item 10.
 9. Run `.venv/bin/python spikes/4L/sample_power.py rebuild` and compare the load-window distinct
-   set against row 1.
+   set against row 1. **Compare it by hand, and do not read the script's exit code as the
+   answer.** `sample_power.py` computes that distinct set and prints it, and does **not** make
+   a set with more than one member a failure - so a run whose ceiling wobbled exits 0 and
+   writes a plausible summary (F81). D-39's rule is that such a run is **invalid, not
+   adjusted**. `scripts/env/capture.py` enforces it by construction from 5C; this spike has
+   not yet been given the same three lines.
 10. Record the whole comparison in `docs/project/VERIFICATION-LOG.md`.
+11. **Test F77 before unregistering anything.** Read `df --block-size=1 /mnt/c`, then
+    `rm -rf ~/.cache/pip`, then read it again. If `C:` free space does not move, a WSL2
+    virtual disk does not return deleted space to the host without compaction, and step 1's
+    space-recovery remedy is void for every future rebuild. The cost of the test is
+    re-downloading 2.85 GiB later, which is why it is the builder's call and not automatic.
+12. **Unregister the test distribution**, which returns the whole 19.53 GiB. This is the
+    load-bearing mitigation for RV-30 rather than a tidy-up: RV-30 reads session-start
+    values, so a peak inside one session never produces two consecutive low readings, but a
+    distribution left registered does. Unregistering is **irreversible** - confirm the name
+    against `wsl --list -v` first, and take the free-space reading afterwards.
 
 **A sanitizer run from stage 17 onward disables the caching allocator or it is not a sanitizer
 run:** `compute-sanitizer` reported 0 errors on a kernel writing 200 floats out of bounds, and
@@ -204,12 +262,12 @@ this file exists for.
 | 1 | What moves the enforced ceiling between 50 W and 30 W is **unexplained**. NitroSense is ruled out by measurement; the Windows power plan has **not** been tested as the cause (R21, narrowed) | 07 |
 | 2 | **Thermal ordering is a confound for every later timing comparison.** Arms run as consecutive blocks start progressively hotter and clock lower, and the difference reads as a kernel result. Logging temperature does not remove the bias; interleaved or randomised arm ordering plus a stated starting-temperature precondition does (RV-39) | 07 · 08 |
 | 3 | **120 s does not reach steady state.** The SM clock was still falling across thirds in both 4L runs (1065→1005 and 1005→982 MHz). Measured ceilings need longer runs | 07 |
-| 4 | `spikes/4L/sample_power.py` has **no cool-down between runs**, so consecutive runs are not thermally matched and their clock medians are not comparable. `capture.sh` gains one (F34) | 5C |
+| 4 | `spikes/4L/sample_power.py` has **no cool-down between runs**, so consecutive runs are not thermally matched and their clock medians are not comparable (F34). **CLOSED for new work 2026-11-28:** `scripts/env/capture.sh` cools down to a floor-relative target on **two** dimensions - temperature and SM clock, because the card holds its boosted clock after work stops (RV-33) - with the timeout as a failure rather than a silent continue, invoked by `run` before any sampling (F103). `sample_power.py` itself is unchanged and still has none, which is why step 9 runs it as a comparison only | closed |
 | 5 | `results/env/4K_power_under_load.txt` was produced by an uncommitted command and cannot be regenerated. `spikes/4L/sample_power.py` is the committed replacement (F32) | closed |
-| 6 | `env/requirements.lock` and `env/setup.sh` do not exist yet | 5C |
+| 6 | **CLOSED 2026-11-28: all three 5C artefacts exist.** `env/requirements.lock` (2026-11-26), `scripts/env/setup.sh` (2026-11-27) and `scripts/env/capture.sh` (2026-11-28). Note the path - `scripts/env/`, not `env/`; this row carried the wrong one until today (F76) | closed |
 | 7 | Which process sets `TRITON_DEFAULT_FP_FUSION` for a GPU-less CI run is undecided (F33) | 15C · 16 |
 | 8 | Build-memory peaks recorded in GiB may be decimal GB mislabelled — 2785948 kB is 2.79 GB or **2.66 GiB**. The direction is favourable, more headroom than recorded (F23) | next docs pass |
 | 9 | `pre-commit` is installed inside the venv only, so gate 05's criterion must check that **the hook fires**, not that the command exists (RV-29) | gate 05 |
 | 10 | PyTorch defines **no host-compiler version bounds for CUDA 13.2**: `CUDA_GCC_VERSIONS` ends at 13.0, so `_check_cuda_version` logs *There are no g++ version bounds defined for CUDA version 13.2* and continues. **That warning is expected output of every CUDA build here, not a defect.** The only ceiling in force is nvcc's own `crt/host_config.h` above GCC major 15 (V22, RV-28) | recorded |
 | 11 | **Installing `g++-15` does not select it.** The C++ path reads `CXX` and defaults to `c++`; the nvcc path takes `-ccbin` from `CC` and only when the build's own flags do not set one. The stage-15 build file must name `-ccbin /usr/bin/g++-15` explicitly and set `CXX`, because a shell variable is lost the moment a build runs without it (F42) | 15 |
-| 12 | **The disk cost of the 5D rebuild has never been computed.** Free space read 59 GB on 2026-11-25 against RV-30's 45 GB trigger and 30 GB floor, so a rebuild costing more than about 14 GB arms that trigger by this project's own action. Section 3 step 1 now requires the budget before the import (F45) | 5D |
+| 12 | **MEASURED 2026-11-27: 19.53 GiB**, four components by two agreeing routes (F45). Section 3 step 1 is the single home for the figure; this row is a pointer. Against the 2026-11-28 reading of 69.04 GiB free the rebuild leaves about 49.5 GiB, **above** RV-30's 45 GB trigger - reversing the conclusion that held on 2026-11-27. **Two parts stay open:** the apt download peak, mitigated by the `apt-get clean` steps rather than measured (F78), and whether deleting the pip cache returns anything to `C:` at all, which step 11 tests (F77) | 5D |
